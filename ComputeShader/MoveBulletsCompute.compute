@@ -1,0 +1,62 @@
+#pragma kernel CSMain
+
+
+struct ComputableBulletStruct {
+    //Origine
+    int m_isUsed;
+    float m_gameTimeWhenTriggerInSeconds;
+
+     float m_xStartPoint;
+     float m_yStartPoint;
+     float m_zStartPoint;
+
+     float m_xDirectionSpeed;
+     float m_yDirectionSpeed;
+     float m_zDirectionSpeed;
+
+
+    //Result
+    double m_xCurrent;
+    double m_yCurrent;
+    double m_zCurrent;
+
+    double m_xPrevious;
+    double m_yPrevious;
+    double m_zPrevious;
+
+    float m_lifeTimeInSeconds;
+
+};
+
+uint m_width;
+uint m_bulletCount;
+float m_timeOfGameInSeconds;
+uniform RWStructuredBuffer<ComputableBulletStruct> m_toProcess;
+
+
+
+
+[numthreads(32,32,1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    //m_toProcess[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+
+    uint index = id.x + id.y * m_width;
+    if (m_toProcess[index].m_isUsed==1) {
+        
+        ComputableBulletStruct value = m_toProcess[index];
+
+        float t = m_timeOfGameInSeconds - value.m_gameTimeWhenTriggerInSeconds;
+        value.m_lifeTimeInSeconds = t ;
+        
+        value.m_xPrevious = value.m_xCurrent;
+        value.m_yPrevious = value.m_yCurrent;
+        value.m_zPrevious = value.m_zCurrent;
+        ///*
+        value.m_xCurrent = (double) (value.m_xStartPoint + (value.m_xDirectionSpeed * t) ) ;
+        value.m_yCurrent = (double) (value.m_yStartPoint + (value.m_yDirectionSpeed * t) );
+        value.m_zCurrent = (double) (value.m_zStartPoint + (value.m_zDirectionSpeed * t) );
+        //*/
+        m_toProcess[index] = value;
+    }
+}
