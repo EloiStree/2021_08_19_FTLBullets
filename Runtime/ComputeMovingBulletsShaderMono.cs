@@ -55,7 +55,6 @@ public class ComputeMovingBulletsShaderMono : MonoBehaviour
         m_movingBulletBuffer.SetData(m_bulletsData);
 
         m_toMoveForDebug.transform.forward = m_bulletsData[0].GetDirection();
-
     }
 
      void Update()
@@ -72,7 +71,9 @@ public class ComputeMovingBulletsShaderMono : MonoBehaviour
         m_computeBullets.SetInt("m_width", m_numberOfBulletsBufferWidth);
         m_computeBullets.SetFloat("m_timeOfGameInSeconds", Time.time);
         m_computeBullets.SetBuffer(kernel, "m_toProcess", m_movingBulletBuffer);
-        m_computeBullets.Dispatch(kernel, m_numberOfBulletsBufferWidth / 32, m_numberOfBulletsBufferWidth / 32, 1);
+        //m_movingBulletBuffer.SetData(m_bulletsData);
+        //        m_computeBullets.Dispatch(kernel, m_numberOfBulletsBufferWidth / 32, m_numberOfBulletsBufferWidth / 32, 1);     
+        m_computeBullets.Dispatch(kernel,  32,  32, 1);
         m_movingBulletBuffer.GetData(m_bulletsData);
     }
 
@@ -81,7 +82,6 @@ public class ComputeMovingBulletsShaderMono : MonoBehaviour
 
 
 [StructLayout(LayoutKind.Sequential)]
-[System.Serializable]
 public struct ComputableBulletStruct
 {
     //Origine

@@ -7,11 +7,57 @@ using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-public class LightSpeedBulletMonoExperiment : MonoBehaviour
+
+public interface BulletsPositioningManager {
+
+    void GetMaxIdValue(out uint maxIdValue);
+    void SetBulletInitialValue(IBulletIdTicket id, IBulletInitValue initialValue); 
+    void SetBulletAsActive(IBulletIdTicket id, bool isActive);
+
+    void GetBulletInfo(IBulletIdTicket id, out IBulletInitValue initialValue);
+    void GetBulletInfo(IBulletIdTicket id, out IBulletPositionState positionState);
+    void GetBulletInfo(IBulletIdTicket id, out IBulletInitValue initialValue, out IBulletPositionState positionState);
+
+}
+
+
+public class DragAndDropUnityTransformsMono : MonoBehaviour {
+
+    public uint m_startIndex=0;
+    [SerializeField] DragAndDropUnityTransforms m_dragAndDropTransforms;
+
+}
+
+[System.Serializable]
+public class DragAndDropUnityTransforms {
+    public Transform[] m_groupOfTransforms;
+
+}
+
+public class BulletVisualCollectionInUnity : IBulletVisualInUnity
+{
+    public void GetAllTransformAsArray(out Transform[] asArray)
+    {
+        throw new NotImplementedException();
+    }
+    public void GetLinkedBulletTicket(out IBulletIdTicket ticket)
+    {
+        throw new NotImplementedException();
+    }
+    public void GetLinkedTransformRoot(out Transform root)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+
+public class JobManager_BulletMovementMono : MonoBehaviour
 {
 
     public int m_bulletCount=50000;
-    public BulletsPoolStructWrapper m_bulletsManager ;
+    public BulletsPoolMovingComputeJobWrapper m_bulletsManager ;
+    public BulletsMovedBulletsToTransformWrapper m_bulletsTransformManager;
+  //  public bullet
     public Transform m_testBulletPosition;
     public BulletData m_tbi;
     public BulletDataResult m_tbr;
@@ -20,7 +66,10 @@ public class LightSpeedBulletMonoExperiment : MonoBehaviour
     public  TransformAccessArray m_TransformsAccessArray;
     private void Awake()
     {
-        m_bulletsManager = new BulletsPoolStructWrapper(m_bulletCount);
+        m_bulletsManager = new BulletsPoolMovingComputeJobWrapper(m_bulletCount);
+        m_bulletsTransformManager = new BulletsMovedBulletsToTransformWrapper(m_bulletCount);
+       // m_bulletsTransformManager.SetTranformSource(IBulletVisualInUnity);
+
 
         m_bulletsManager.GetBulletReference(0, out m_bulletRef);
         m_bulletRef.SetAllInOne(true, Vector3.zero, Vector3.up, 0);
@@ -65,16 +114,16 @@ public class LightSpeedBulletMonoExperiment : MonoBehaviour
 }
 
 
-public interface BulletClaimerPool {
+//public interface BulletClaimerPool {
 
-    void Claim(out int bulletIndex, out ClaimedBullet bullet);
-    void Unclaim(out int bulletIndex);
+//    void Claim(out int bulletIndex, out ClaimedBullet bullet);
+//    void Unclaim(out int bulletIndex);
 
-}
-public interface ClaimedBullet {
-    void GetBulletInfo(out ComputedBulletInfo info);
-    void Unclaimed();
-}
+//}
+//public interface ClaimedBullet {
+//    void GetBulletInfo(out ComputedBulletInfo info);
+//    void Unclaimed();
+//}
 public interface ComputedBulletInfo
 {
 
@@ -92,7 +141,6 @@ public interface BulletSetter {
     void SetStartInfo(Vector3 startPoint, Vector3 directionSpeed);
     void SetTimeWhenTriggered(float triggeredTimeInSeconds);
     void SetAllInOne(bool isUsing, Vector3 startPoint, Vector3 directionSPeed, float triggeredTimeInSeconds);
-
 }
 
 public interface BulletInfoAndBasicAccessRef : ComputedBulletInfo, BulletSetter { 
@@ -101,9 +149,9 @@ public interface BulletInfoAndBasicAccessRef : ComputedBulletInfo, BulletSetter 
 public class BulletPoolReference : BulletInfoAndBasicAccessRef
 {
     public int m_bulletIndex;
-    BulletsPoolStructWrapper m_bulletsPool;
+    BulletsPoolMovingComputeJobWrapper m_bulletsPool;
 
-    public BulletPoolReference(int bulletIndex, BulletsPoolStructWrapper bulletsPool)
+    public BulletPoolReference(int bulletIndex, BulletsPoolMovingComputeJobWrapper bulletsPool)
     {
         m_bulletIndex = bulletIndex;
         m_bulletsPool = bulletsPool;
@@ -177,25 +225,145 @@ public class BulletPoolReference : BulletInfoAndBasicAccessRef
     }
 }
 
+public class BulletsMovedBulletsToTransformWrapper{
 
+    public BulletsMovedBulletsToTransform m_jobsResultToTransform;
+    public Transform[] m_transformsByBulletsId;
+    TransformAccessArray targets;
 
-public class PoolableBulletDataRef {
-    public int m_bulletIndex;
+    public BulletsMovedBulletsToTransformWrapper(int bulletCount)
+    {
+        m_transformsByBulletsId = new Transform[bulletCount];
+        m_jobsResultToTransform.InitNumberOfBullet(bulletCount,false);
+        RefreshTransformTargets();
+    }
+
+   
+    public void RefreshTransformTargets() {
+        if(targets.isCreated)
+            targets.Dispose();
+        targets = new TransformAccessArray(m_transformsByBulletsId);
+    }
+    public void RefreshPosition()
+    {
+        JobHandle handler = m_jobsResultToTransform.Schedule(targets);
+        handler.Complete(); 
+    }
+
+   
+    public void ForceDispose()
+    {
+        m_jobsResultToTransform.DisposeMemoryUse();
+        targets.Dispose();
+    }
+
+    public void SetTranformView(IBulletIdTicket bulletId, Transform proposedView)
+    {
+        bulletId.GetId(out int id);
+        if(id>=0 && id <m_transformsByBulletsId.Length)
+        {
+            m_transformsByBulletsId[id] = proposedView;
+        }
+    }
+
+    public void GetLinkedTransform(IBulletIdTicket bulletId, out Transform linkedTransform)
+    {
+        bulletId.GetId(out int id);
+        if (id >= 0 && id < m_transformsByBulletsId.Length)
+        {
+            linkedTransform = m_transformsByBulletsId[id];
+        }
+        else {
+            linkedTransform = null;
+        }
+    }
+
+    ~BulletsMovedBulletsToTransformWrapper()
+    {
+        m_jobsResultToTransform.DisposeMemoryUse();
+    }
+
 }
-public class BulletsPoolStructWrapper {
+
+public struct BulletsMovedBulletsToTransform : IJobParallelForTransform
+{
+    private bool m_disposable;
+    public bool m_takeInChargeRotation;
+
+    NativeArray<BulletDataResult> poolOfBulletsPosition;
+    public bool m_useLocalPosition;
+
+    public void InitNumberOfBullet(int bulletsCount, bool takeInChargeRotation = true)
+    {
+        m_takeInChargeRotation = takeInChargeRotation;
+        if (!m_disposable)
+        {
+            m_disposable = true;
+            poolOfBulletsPosition = new NativeArray<BulletDataResult>(bulletsCount, Allocator.Persistent);
+        }
+    }
+
+    public void SetWithComputedResult(ref NativeArray<BulletDataResult> dataToProcess)
+    {
+        dataToProcess.CopyTo(poolOfBulletsPosition);
+    }
+
+    public void DisposeMemoryUse()
+    {
+        if (m_disposable)
+        {
+            m_disposable = false;
+            if (poolOfBulletsPosition != null)
+            {
+                poolOfBulletsPosition.Dispose();
+            }
+        }
+    }
+
+
+    public void Execute(int index, TransformAccess transform)
+    {
+        if (!transform.isValid)
+            return;
+        Vector3 c = m_useLocalPosition ? transform.localPosition : transform.position;
+
+        c.x = (float)poolOfBulletsPosition[index].m_currentPosition.m_x;
+        c.y = (float)poolOfBulletsPosition[index].m_currentPosition.m_y;
+        c.z = (float)poolOfBulletsPosition[index].m_currentPosition.m_z;
+
+        if (m_takeInChargeRotation) {
+
+            Vector3 previous = m_useLocalPosition ? transform.localPosition : transform.position;
+            Vector3 dir = c - previous;
+            Quaternion orientation = Quaternion.LookRotation(dir, Vector3.up);
+
+            if (m_useLocalPosition)
+                transform.localRotation = orientation;
+            else
+                transform.rotation = orientation;
+        }
+
+        if (m_useLocalPosition)
+            transform.localPosition = c;
+        else
+            transform.position = c;
+    }
+}
+
+
+public class BulletsPoolMovingComputeJobWrapper {
     public BulletsPoolMovingComputeJob m_pool;
     public int m_bulletCount;
+    public uint m_cyclingIndex;
 
-    public BulletsPoolStructWrapper(int bulletCount) {
+    public BulletsPoolMovingComputeJobWrapper(int bulletCount) {
         m_bulletCount = bulletCount;
         m_pool.InitNumberOfBullet(bulletCount);
     }
 
     public void RefreshPosition() {
-
         JobHandle handler = m_pool.Schedule(m_bulletCount, 64);
         handler.Complete();
-
     }
 
     public void GetBulletReference(int bulletIndex, out BulletInfoAndBasicAccessRef bulletRef)
@@ -206,14 +374,68 @@ public class BulletsPoolStructWrapper {
     {
         m_pool.DisposeMemoryUse();
     }
-    ~BulletsPoolStructWrapper()
+
+    public void GetNextAvailableBulletId(out IBulletIdTicket bulletId)
+    {
+        bulletId = null;
+        int antiLoop=0;
+        while( antiLoop<m_bulletCount) {
+            if (!m_pool.IsUsed(m_cyclingIndex))
+            {
+                bulletId = new BulletTicketId(m_cyclingIndex);
+                m_cyclingIndex++;
+                return;
+            }
+            else {
+                m_cyclingIndex++;
+            }
+            antiLoop++;
+        }
+        Debug.Log("Yoo "+ antiLoop);
+    }
+
+    ~BulletsPoolMovingComputeJobWrapper()
     {
         m_pool.DisposeMemoryUse();
     }
 }
 
+[System.Serializable]
+public struct BulletTicketId : IBulletIdTicket
+{
+    [SerializeField] uint m_id;
+
+    public BulletTicketId(uint id)
+    {
+        this.m_id = id;
+    }
+    public BulletTicketId(int id)
+    {
+        this.m_id =(uint) id;
+    }
+    public uint GetIdAsUInt()
+    {
+        return m_id;
+    }
+    public int GetIdAsInt()
+    {
+        return (int)m_id;
+    }
+    public void GetId(out int id)
+    {
+        id = (int) m_id;
+    }
+    public void GetId(out uint id)
+    {
+        id = m_id;
+    }
+}
+
+
+
+
 [BurstCompile(CompileSynchronously = true)]
-public struct BulletsPoolMovingComputeJob : IJobParallelFor {
+public struct BulletsPoolMovingComputeJob : IJobParallelFor , IJobParallelForTransform{
 
 
     public float m_previousGameTimeInSeconds;
@@ -229,6 +451,11 @@ public struct BulletsPoolMovingComputeJob : IJobParallelFor {
             poolOfBulletsPosition = new NativeArray<BulletDataResult>(bulletsCount, Allocator.Persistent);
         }
     }
+
+    public void GetCopyOfComputedBulletsPositionResult( ref NativeArray<BulletDataResult> whereToCopy) {
+        poolOfBulletsPosition.CopyTo(whereToCopy) ;
+    }
+
 
     public void SetCurrentTime(float timeInSeconds)
     {
@@ -293,6 +520,19 @@ public struct BulletsPoolMovingComputeJob : IJobParallelFor {
             poolOfBulletsPosition[index] = result;
 
         }
+    }
+
+    public bool IsUsed(uint index)
+    {
+        return poolOfBullets[(int)index].m_isUsed;
+    }
+    public bool IsUsed(int index)
+    {
+        return poolOfBullets[index].m_isUsed;
+    }
+
+    public void Execute(int index, TransformAccess transform)
+    {
     }
 }
 
