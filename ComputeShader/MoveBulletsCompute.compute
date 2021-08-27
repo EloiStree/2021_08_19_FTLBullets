@@ -16,13 +16,13 @@ struct ComputableBulletStruct {
 
 
     //Result
-    double m_xCurrent;
-    double m_yCurrent;
-    double m_zCurrent;
+     float m_xCurrent;
+     float m_yCurrent;
+     float m_zCurrent;
 
-    double m_xPrevious;
-    double m_yPrevious;
-    double m_zPrevious;
+     float m_xPrevious;
+    float m_yPrevious;
+    float m_zPrevious;
 
     float m_lifeTimeInSeconds;
 
