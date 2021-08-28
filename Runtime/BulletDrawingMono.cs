@@ -5,7 +5,7 @@ using UnityEngine;
 public class BulletDrawingMono : MonoBehaviour
 {
 
-    public BulletTagMono m_bulletTag;
+    public AbstractBulletTagMono m_bulletTag;
 
 
     public Color m_bulletPath = Color.green;
@@ -14,8 +14,8 @@ public class BulletDrawingMono : MonoBehaviour
     public float m_willBeDistance=20f;
     void Update()
     {
-        Vector3 p= m_bulletTag.m_capsuleDebug.m_previousPoint.position
-        , c=  m_bulletTag.m_capsuleDebug.m_currentPoint.position;
+        Vector3 p, c;
+        m_bulletTag.GetLineAsPoints(out p, out c);
         Vector3 direction = c-p ;
         Debug.DrawLine(c, p + direction * m_willBeDistance, m_bulletWillBe);
         Debug.DrawLine(p,p + direction + Vector3.up*0.01f, m_bulletNext);

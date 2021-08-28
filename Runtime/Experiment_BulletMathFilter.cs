@@ -15,114 +15,17 @@ public class Experiment_BulletMathFilter : MonoBehaviour
     public float m_radiusB = 0.1f;
 
     [Header("Debug")]
-    public DebugInfo m_debug;
-    public ReachFiltering m_reachFilter;
+    public BulletCapsuleCollisionUtility.CapsuleReachCheckDebugInfo m_debug;
+    public BulletCapsuleCollisionUtility.ReachFiltering m_reachFilter;
     public bool m_useDebugDraw;
-    public enum ReachFiltering { LineANotInDistanceRange, NotEvenIn180GoodDirection, LineAOutsideVerticalAngle, LineAOutsideHorizontalAngle, MaybeReachable }
     private void Update()
     {
-        Test(out m_reachFilter, ref  m_debug, m_useDebugDraw);
+        BulletCapsuleCollisionUtility.CheckReachabilityOfTwoCapsules(
+                 m_startPointA, m_endPointA, m_radiusA,
+                m_startPointB, m_endPointB, m_radiusB,
+            out m_reachFilter, ref  m_debug, m_useDebugDraw);
     }
-
-    private void Test(out ReachFiltering reachableState,ref DebugInfo debugInfo, bool useDebugDraw)
-    {
-        reachableState = ReachFiltering.MaybeReachable;
-        Vector3 startPointA; Vector3 endPointA; float lineRadiusA;
-        Vector3 startPointB; Vector3 endPointB; float lineRadiusB;
-
-        startPointA = m_startPointA.position;
-        startPointB = m_startPointB.position;
-        endPointA = m_endPointA.position;
-        endPointB = m_endPointB.position;
-        lineRadiusA = m_radiusA;
-        lineRadiusB = m_radiusB;
-
-
-        float radiusAandB = lineRadiusA + lineRadiusB;
-        float distanceStart = (startPointB - startPointA).magnitude;
-        float distanceEnd = (endPointB - startPointA).magnitude;
-        float lineMaxRange = (endPointA - startPointA).magnitude + radiusAandB;
-        if (lineMaxRange <= distanceStart && lineMaxRange <= distanceEnd)
-        {
-            reachableState = ReachFiltering.LineANotInDistanceRange;
-            return;
-        }
-
-
-        //TO DO: CHeck that at least the bullet is going in the global 180 directoni of point;
-
-
-
-        Vector3 targetDirectionCenter = ((startPointB + endPointB) / 2f) - startPointA;
-        Vector3 up = Vector3.Cross(startPointB - startPointA, endPointB - startPointA);
-        Quaternion relocateAngle = Quaternion.Inverse(Quaternion.LookRotation(targetDirectionCenter, up));
-        Vector3 a = startPointA;
-        startPointA = relocateAngle * (startPointA - a);
-        endPointA = relocateAngle * (endPointA - a);
-        startPointB = relocateAngle * (startPointB - a);
-        endPointB = relocateAngle * (endPointB - a);
-
-        if (useDebugDraw)
-        {
-            Debug.DrawLine(startPointB, endPointB, Color.red);
-        }
-        Vector3 startExtremB = startPointB + (startPointB - endPointB).normalized * radiusAandB;
-        Vector3 endExtremB = endPointB + (endPointB - startPointB).normalized * radiusAandB; ;
-
-        Vector3 startPointADir = startExtremB - startPointA;
-        Vector3 endPointBDir = endPointB - startPointA;
-
-        Vector3 shortestVector = startPointADir.magnitude < endPointBDir.magnitude ? startPointADir : endPointBDir;
-        Vector3 upExtreamB = shortestVector + Vector3.up * radiusAandB;
-
-
-        if (useDebugDraw) { 
-            Debug.DrawLine(startExtremB + Vector3.up * 0.1f, endExtremB + Vector3.up * 0.1f, Color.yellow);
-            Debug.DrawLine(shortestVector, upExtreamB, Color.yellow);
-            Debug.DrawLine(shortestVector, shortestVector - Vector3.up * radiusAandB, Color.yellow);
-            Debug.DrawLine(startPointA, endPointA + (endPointA - startPointA) , Color.white);
-        }
-
-
-        float verticalAngleMax = Vector2.Angle(new Vector3(upExtreamB.z, upExtreamB.y), Vector2.right);
-        float pointAngleVertical = Vector2.Angle(new Vector3(endPointA.z, endPointA.y), Vector2.right);
-
-        if (pointAngleVertical > verticalAngleMax) {
-            reachableState = ReachFiltering.LineAOutsideVerticalAngle;
-            return;
-        }
-
-        float extreStartBAngle = Vector2.Angle(new Vector3(startExtremB.x, startExtremB.z), Vector2.up);
-        float extreEndBAngle = Vector2.Angle(new Vector3(endExtremB.x, endExtremB.z), Vector2.up);
-        float bigestAngleHorizontal = extreStartBAngle > extreEndBAngle ? extreStartBAngle : extreEndBAngle;
-
-        float pointAngleHorizontal = Vector2.Angle(new Vector3(endPointA.x, endPointA.z), Vector2.up);
-
-        if (pointAngleHorizontal > bigestAngleHorizontal)
-        {
-            reachableState = ReachFiltering.LineAOutsideVerticalAngle;
-            return;
-        }
-
-
-
-        if (debugInfo != null) {
-            debugInfo. m_angleHorizontalLeft = extreStartBAngle;
-            debugInfo.m_angleHorizontalRight = extreEndBAngle;
-            debugInfo.m_angleVertical = verticalAngleMax;
-            debugInfo.m_bulletAngleHorizontal = pointAngleHorizontal;
-            debugInfo.m_bulletAngleVertical = pointAngleVertical;
-        }
-    }
-    [System.Serializable]
-    public class DebugInfo{
-        public float m_angleHorizontalLeft;
-        public float m_angleHorizontalRight;
-        public float m_bulletAngleHorizontal;
-        public float m_angleVertical;
-        public float m_bulletAngleVertical;
-    }
-
+   
     //void UpdateArchived()
     //{
 

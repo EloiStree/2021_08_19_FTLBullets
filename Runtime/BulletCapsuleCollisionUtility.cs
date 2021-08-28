@@ -9,8 +9,125 @@ public interface ICapsuleLine {
     void GetLineAsPoints(out Vector3 startPointPosition, out Vector3 endPointPosition);
     void GetLineRadius(out float radius);
 }
+public interface ICapsuleLineWithId : ICapsuleLine{
+
+    void GetUniqueId(out string id);
+
+}
+
 public class BulletCapsuleCollisionUtility
 {
+
+
+    public static void CheckReachabilityOfTwoCapsules(
+      Transform startPointA, Transform endPointA, float lineRadiusA,
+  Transform startPointB, Transform endPointB, float lineRadiusB,
+      out ReachFiltering reachableState, ref CapsuleReachCheckDebugInfo debugInfo, bool useDebugDraw)
+    {
+
+        CheckReachabilityOfTwoCapsules(
+            startPointA.position, endPointA.position, lineRadiusA,
+    startPointB.position, endPointB.position, lineRadiusB, out reachableState, ref debugInfo, useDebugDraw);
+    }
+    public static  void CheckReachabilityOfTwoCapsules(
+    Vector3 startPointA, Vector3 endPointA, float lineRadiusA,
+Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
+    out ReachFiltering reachableState, ref CapsuleReachCheckDebugInfo debugInfo, bool useDebugDraw)
+    {
+        reachableState = ReachFiltering.MaybeReachable;
+
+
+        float radiusAandB = lineRadiusA + lineRadiusB;
+        float distanceStart = (startPointB - startPointA).magnitude;
+        float distanceEnd = (endPointB - startPointA).magnitude;
+        float lineMaxRange = (endPointA - startPointA).magnitude + radiusAandB;
+        if (lineMaxRange <= distanceStart && lineMaxRange <= distanceEnd)
+        {
+            reachableState = ReachFiltering.LineANotInDistanceRange;
+            return;
+        }
+
+
+        //TO DO: CHeck that at least the bullet is going in the global 180 directoni of point;
+
+
+
+        Vector3 targetDirectionCenter = ((startPointB + endPointB) / 2f) - startPointA;
+        Vector3 up = Vector3.Cross(startPointB - startPointA, endPointB - startPointA);
+        Quaternion relocateAngle = Quaternion.Inverse(Quaternion.LookRotation(targetDirectionCenter, up));
+        Vector3 a = startPointA;
+        startPointA = relocateAngle * (startPointA - a);
+        endPointA = relocateAngle * (endPointA - a);
+        startPointB = relocateAngle * (startPointB - a);
+        endPointB = relocateAngle * (endPointB - a);
+
+        if (useDebugDraw)
+        {
+            Debug.DrawLine(startPointB, endPointB, Color.red);
+        }
+        Vector3 startExtremB = startPointB + (startPointB - endPointB).normalized * radiusAandB;
+        Vector3 endExtremB = endPointB + (endPointB - startPointB).normalized * radiusAandB; ;
+
+        Vector3 startPointADir = startExtremB - startPointA;
+        Vector3 endPointBDir = endPointB - startPointA;
+
+        Vector3 shortestVector = startPointADir.magnitude < endPointBDir.magnitude ? startPointADir : endPointBDir;
+        Vector3 upExtreamB = shortestVector + Vector3.up * radiusAandB;
+
+
+        if (useDebugDraw)
+        {
+            Debug.DrawLine(startExtremB + Vector3.up * 0.1f, endExtremB + Vector3.up * 0.1f, Color.yellow);
+            Debug.DrawLine(shortestVector, upExtreamB, Color.yellow);
+            Debug.DrawLine(shortestVector, shortestVector - Vector3.up * radiusAandB, Color.yellow);
+            Debug.DrawLine(startPointA, endPointA + (endPointA - startPointA), Color.white);
+        }
+
+
+        float verticalAngleMax = Vector2.Angle(new Vector3(upExtreamB.z, upExtreamB.y), Vector2.right);
+        float pointAngleVertical = Vector2.Angle(new Vector3(endPointA.z, endPointA.y), Vector2.right);
+
+        if (pointAngleVertical > verticalAngleMax)
+        {
+            reachableState = ReachFiltering.LineAOutsideVerticalAngle;
+            return;
+        }
+
+        float extreStartBAngle = Vector2.Angle(new Vector3(startExtremB.x, startExtremB.z), Vector2.up);
+        float extreEndBAngle = Vector2.Angle(new Vector3(endExtremB.x, endExtremB.z), Vector2.up);
+        float bigestAngleHorizontal = extreStartBAngle > extreEndBAngle ? extreStartBAngle : extreEndBAngle;
+
+        float pointAngleHorizontal = Vector2.Angle(new Vector3(endPointA.x, endPointA.z), Vector2.up);
+
+        if (pointAngleHorizontal > bigestAngleHorizontal)
+        {
+            reachableState = ReachFiltering.LineAOutsideHorizontalAngle;
+            return;
+        }
+
+
+
+        if (debugInfo != null)
+        {
+            debugInfo.m_angleHorizontalLeft = extreStartBAngle;
+            debugInfo.m_angleHorizontalRight = extreEndBAngle;
+            debugInfo.m_angleVertical = verticalAngleMax;
+            debugInfo.m_bulletAngleHorizontal = pointAngleHorizontal;
+            debugInfo.m_bulletAngleVertical = pointAngleVertical;
+        }
+    }
+    [System.Serializable]
+    public class CapsuleReachCheckDebugInfo
+    {
+        public float m_angleHorizontalLeft;
+        public float m_angleHorizontalRight;
+        public float m_bulletAngleHorizontal;
+        public float m_angleVertical;
+        public float m_bulletAngleVertical;
+    }
+    public enum ReachFiltering { LineANotInDistanceRange, LineAOutsideVerticalAngle, LineAOutsideHorizontalAngle, MaybeReachable }
+
+
 
     public struct TwoLinesCollisionInfo
     {
