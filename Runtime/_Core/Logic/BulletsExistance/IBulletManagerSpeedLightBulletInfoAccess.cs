@@ -1,6 +1,6 @@
 public interface IBulletManagerSpeedLightBulletInfoAccess {
 
-    public void GetSpeedLightBulletsInfo(uint id, ComputedBulletInfo bulletInfo);
+    public void GetBulletInfo(uint id, ComputedBulletInfo bulletInfo);
 }
 
 

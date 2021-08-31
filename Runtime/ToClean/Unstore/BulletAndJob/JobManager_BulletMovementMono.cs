@@ -25,7 +25,6 @@ public class DragAndDropUnityTransformsMono : MonoBehaviour {
 
     public uint m_startIndex=0;
     [SerializeField] DragAndDropUnityTransforms m_dragAndDropTransforms;
-
 }
 
 [System.Serializable]
@@ -34,82 +33,66 @@ public class DragAndDropUnityTransforms {
 
 }
 
-public class BulletVisualCollectionInUnity : IBulletVisualInUnity
-{
-    public void GetAllTransformAsArray(out Transform[] asArray)
-    {
-        throw new NotImplementedException();
-    }
-    public void GetLinkedBulletTicket(out IBulletIdTicket ticket)
-    {
-        throw new NotImplementedException();
-    }
-    public void GetLinkedTransformRoot(out Transform root)
-    {
-        throw new NotImplementedException();
-    }
-}
+
+//public class JobManager_BulletMovementMono : MonoBehaviour
+//{
+
+//    public int m_bulletCount=50000;
+//    public BulletsPoolMovingComputeJobWrapper m_bulletsManager ;
+//  //  public bullet
+//    public Transform m_testBulletPosition;
+//    public TriggeredBulletData m_tbi;
+//    public BulletDataResult m_tbr;
+//    BulletInfoAndBasicAccessRef m_bulletRef;
+
+//    public  TransformAccessArray m_TransformsAccessArray;
+//    private void Awake()
+//    {
+//        m_bulletsManager = new BulletsPoolMovingComputeJobWrapper(m_bulletCount);
+//       // m_bulletsTransformManager.SetTranformSource(IBulletVisualInUnity);
 
 
-public class JobManager_BulletMovementMono : MonoBehaviour
-{
+//        m_bulletsManager.GetBulletReference(0, out m_bulletRef);
+//        m_bulletRef.SetAllInOne(true, Vector3.zero, Vector3.up, 0);
+//        m_testBulletPosition.forward = Vector3.up;
+//        for (int i = 0; i < m_bulletsManager.m_bulletCount; i++)
+//        {
+//            m_bulletsManager.m_pool.SetBullet(i, new TriggeredBulletData()
+//            {
+//                m_isActive = true,
+//                m_bulletInfo = new BulletDataInitValue()
+//                {
+//                    m_startPoint = Vector3.zero,
+//                    m_directionSpeed = new Vector3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value) * UnityEngine.Random.value * 4f
+//                }
+//            }); 
+//        }
+//    }
 
-    public int m_bulletCount=50000;
-    public BulletsPoolMovingComputeJobWrapper m_bulletsManager ;
-  //  public bullet
-    public Transform m_testBulletPosition;
-    public TriggeredBulletData m_tbi;
-    public BulletDataResult m_tbr;
-    BulletInfoAndBasicAccessRef m_bulletRef;
-
-    public  TransformAccessArray m_TransformsAccessArray;
-    private void Awake()
-    {
-        m_bulletsManager = new BulletsPoolMovingComputeJobWrapper(m_bulletCount);
-       // m_bulletsTransformManager.SetTranformSource(IBulletVisualInUnity);
-
-
-        m_bulletsManager.GetBulletReference(0, out m_bulletRef);
-        m_bulletRef.SetAllInOne(true, Vector3.zero, Vector3.up, 0);
-        m_testBulletPosition.forward = Vector3.up;
-        for (int i = 0; i < m_bulletsManager.m_bulletCount; i++)
-        {
-            m_bulletsManager.m_pool.SetBullet(i, new TriggeredBulletData()
-            {
-                m_isActive = true,
-                m_bulletInfo = new BulletDataInitValue()
-                {
-                    m_startPoint = Vector3.zero,
-                    m_directionSpeed = new Vector3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value) * UnityEngine.Random.value * 4f
-                }
-            }); 
-        }
-    }
-
-    private void Update()
-    {
-        m_bulletsManager.m_pool.SetCurrentTime(Time.time);
-        m_bulletsManager.RefreshPosition();
+//    private void Update()
+//    {
+//        m_bulletsManager.m_pool.SetCurrentTime(Time.time);
+//        m_bulletsManager.RefreshPosition();
         
-    }
-    private void LateUpdate()
-    {
-        m_bulletsManager.m_pool.GetBullet(0, out m_tbi);
-        m_bulletsManager.m_pool.GetBulletResult(0, out m_tbr);
-        m_bulletRef.GetTajectory(out Vector3 from, out Vector3 to);
-        m_testBulletPosition.position = 
-            new Vector3( (float)to.x, (float)to.y, (float)to.z);
-    }
+//    }
+//    private void LateUpdate()
+//    {
+//        m_bulletsManager.m_pool.GetBullet(0, out m_tbi);
+//        m_bulletsManager.m_pool.GetBulletResult(0, out m_tbr);
+//        m_bulletRef.GetTajectory(out Vector3 from, out Vector3 to);
+//        m_testBulletPosition.position = 
+//            new Vector3( (float)to.x, (float)to.y, (float)to.z);
+//    }
 
-    private void OnDestroy()
-    {
-        m_bulletsManager.ForceDispose();
-    }
-    private void OnApplicationQuit()
-    {
-        m_bulletsManager.ForceDispose();
-    }
-}
+//    private void OnDestroy()
+//    {
+//        m_bulletsManager.ForceDispose();
+//    }
+//    private void OnApplicationQuit()
+//    {
+//        m_bulletsManager.ForceDispose();
+//    }
+//}
 
 
 //public interface BulletClaimerPool {
@@ -144,195 +127,195 @@ public interface BulletSetter {
 public interface BulletInfoAndBasicAccessRef : ComputedBulletInfo, BulletSetter { 
 
 }
-public class BulletPoolReference : BulletInfoAndBasicAccessRef
-{
-    public int m_bulletIndex;
-    BulletsPoolMovingComputeJobWrapper m_bulletsPool;
+//public class BulletPoolReference : BulletInfoAndBasicAccessRef
+//{
+//    public int m_bulletIndex;
+//    BulletsPoolMovingComputeJobWrapper m_bulletsPool;
 
-    public BulletPoolReference(int bulletIndex, BulletsPoolMovingComputeJobWrapper bulletsPool)
-    {
-        m_bulletIndex = bulletIndex;
-        m_bulletsPool = bulletsPool;
-    }
+//    public BulletPoolReference(int bulletIndex, BulletsPoolMovingComputeJobWrapper bulletsPool)
+//    {
+//        m_bulletIndex = bulletIndex;
+//        m_bulletsPool = bulletsPool;
+//    }
 
-    public void GetCurrentPosition(out Vector3 position)
-    {
-        m_bulletsPool.m_pool.GetBulletResult(m_bulletIndex, out BulletDataResult result);
-        position = result.m_currentPosition;
-    }
-    public void GetPreviousPosition(out Vector3 position)
-    {
-        m_bulletsPool.m_pool.GetBulletResult(m_bulletIndex, out BulletDataResult result);
-        position = result.m_currentPosition;
-    }
-    public void GetTajectory(out Vector3 previousPosition, out Vector3 currentPosition)
-    {
-        m_bulletsPool.m_pool.GetBulletResult(m_bulletIndex, out BulletDataResult result);
-        previousPosition = result.m_previousPosition;
-        currentPosition = result.m_currentPosition;
-    }
-    public void GetDirection(out Vector3 direction)
-    {
-        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
-        direction = result.m_bulletInfo.m_directionSpeed;
-    }
+//    public void GetCurrentPosition(out Vector3 position)
+//    {
+//        m_bulletsPool.m_pool.GetBulletResult(m_bulletIndex, out BulletDataResult result);
+//        position = result.m_currentPosition;
+//    }
+//    public void GetPreviousPosition(out Vector3 position)
+//    {
+//        m_bulletsPool.m_pool.GetBulletResult(m_bulletIndex, out BulletDataResult result);
+//        position = result.m_currentPosition;
+//    }
+//    public void GetTajectory(out Vector3 previousPosition, out Vector3 currentPosition)
+//    {
+//        m_bulletsPool.m_pool.GetBulletResult(m_bulletIndex, out BulletDataResult result);
+//        previousPosition = result.m_previousPosition;
+//        currentPosition = result.m_currentPosition;
+//    }
+//    public void GetDirection(out Vector3 direction)
+//    {
+//        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
+//        direction = result.m_bulletInfo.m_directionSpeed;
+//    }
 
     
 
-    public void GetStartPoint(out Vector3 start)
-    {
-        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
-        start = result.m_bulletInfo.m_startPoint;
-    }
+//    public void GetStartPoint(out Vector3 start)
+//    {
+//        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
+//        start = result.m_bulletInfo.m_startPoint;
+//    }
 
-    public void SetAsUsing(bool isUsing)
-    {
-        m_bulletsPool.m_pool.SetBulletAs(m_bulletIndex, isUsing);
-    }
+//    public void SetAsUsing(bool isUsing)
+//    {
+//        m_bulletsPool.m_pool.SetBulletAs(m_bulletIndex, isUsing);
+//    }
 
-    public void SetStartInfo(Vector3 startPoint, Vector3 directionSpeed)
-    {
-        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
-        result.m_bulletInfo.m_startPoint = startPoint;
-        result.m_bulletInfo.m_directionSpeed = directionSpeed;
-        m_bulletsPool.m_pool.SetBullet(m_bulletIndex, result);
-    }
+//    public void SetStartInfo(Vector3 startPoint, Vector3 directionSpeed)
+//    {
+//        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
+//        result.m_bulletInfo.m_startPoint = startPoint;
+//        result.m_bulletInfo.m_directionSpeed = directionSpeed;
+//        m_bulletsPool.m_pool.SetBullet(m_bulletIndex, result);
+//    }
    
 
-    public void SetTimeWhenTriggered(float triggeredTimeInSeconds)
-    {
-        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
-        result.m_gameTimeWhenTriggerInSeconds = triggeredTimeInSeconds;
-        m_bulletsPool.m_pool.SetBullet(m_bulletIndex, result);
-    }
+//    public void SetTimeWhenTriggered(float triggeredTimeInSeconds)
+//    {
+//        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
+//        result.m_gameTimeWhenTriggerInSeconds = triggeredTimeInSeconds;
+//        m_bulletsPool.m_pool.SetBullet(m_bulletIndex, result);
+//    }
 
-    public void SetAllInOne(bool isUsing, Vector3 startPoint, Vector3 directionSpeed, float triggeredTimeInSeconds)
-    {
-        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
-        result.m_bulletInfo.m_startPoint = startPoint;
-        result.m_bulletInfo.m_directionSpeed = directionSpeed;
-        result.m_gameTimeWhenTriggerInSeconds  = triggeredTimeInSeconds;
-        result.m_isActive = isUsing;
-        m_bulletsPool.m_pool.SetBullet(m_bulletIndex, result);
-    }
+//    public void SetAllInOne(bool isUsing, Vector3 startPoint, Vector3 directionSpeed, float triggeredTimeInSeconds)
+//    {
+//        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
+//        result.m_bulletInfo.m_startPoint = startPoint;
+//        result.m_bulletInfo.m_directionSpeed = directionSpeed;
+//        result.m_gameTimeWhenTriggerInSeconds  = triggeredTimeInSeconds;
+//        result.m_isActive = isUsing;
+//        m_bulletsPool.m_pool.SetBullet(m_bulletIndex, result);
+//    }
 
-    public void GetLifeTime(out float lifeTimeInSeconds)
-    {
-        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
-        lifeTimeInSeconds = result.m_gameTimeWhenTriggerInSeconds;
-    }
-}
+//    public void GetLifeTime(out float lifeTimeInSeconds)
+//    {
+//        m_bulletsPool.m_pool.GetBullet(m_bulletIndex, out TriggeredBulletData result);
+//        lifeTimeInSeconds = result.m_gameTimeWhenTriggerInSeconds;
+//    }
+//}
 
 
-public class BulletsPoolMovingComputeJobWrapper {
-    public BulletsPoolMovingComputeJob m_pool;
-    public int m_bulletCount;
-    public Transform[] m_transformsByBulletsId;
-    TransformAccessArray targets;
+//public class BulletsPoolMovingComputeJobWrapper {
+//    public BulletsPoolMovingComputeJob m_pool;
+//    public int m_bulletCount;
+//    public Transform[] m_transformsByBulletsId;
+//    TransformAccessArray targets;
     
-    public uint m_cyclingIndex;
-    public BulletsPoolMovingComputeJobWrapper(int bulletCount)
-    {
-        m_bulletCount = bulletCount;
-        m_transformsByBulletsId = new Transform[bulletCount];
-        targets = new TransformAccessArray(m_transformsByBulletsId);
-        m_pool.InitNumberOfBullet(bulletCount);
-        RefreshTransformTargets();
-    }
-    public BulletsPoolMovingComputeJobWrapper(int bulletCount, NativeArray<BulletDataResult> linkedData)
-    {
-        m_bulletCount = bulletCount;
-        m_transformsByBulletsId = new Transform[bulletCount];
-        targets = new TransformAccessArray(m_transformsByBulletsId);
-        m_pool.InitNumberOfBullet(bulletCount, linkedData);
-        RefreshTransformTargets();
-    }
+//    public uint m_cyclingIndex;
+//    public BulletsPoolMovingComputeJobWrapper(int bulletCount)
+//    {
+//        m_bulletCount = bulletCount;
+//        m_transformsByBulletsId = new Transform[bulletCount];
+//        targets = new TransformAccessArray(m_transformsByBulletsId);
+//        m_pool.InitNumberOfBullet(bulletCount);
+//        RefreshTransformTargets();
+//    }
+//    public BulletsPoolMovingComputeJobWrapper(int bulletCount, NativeArray<BulletDataResult> linkedData)
+//    {
+//        m_bulletCount = bulletCount;
+//        m_transformsByBulletsId = new Transform[bulletCount];
+//        targets = new TransformAccessArray(m_transformsByBulletsId);
+//        m_pool.InitNumberOfBullet(bulletCount, linkedData);
+//        RefreshTransformTargets();
+//    }
 
-    public void RefreshPosition() {
-        JobHandle handler = m_pool.Schedule(m_bulletCount, 64);
-        handler.Complete();
-    }
+//    public void RefreshPosition() {
+//        JobHandle handler = m_pool.Schedule(m_bulletCount, 64);
+//        handler.Complete();
+//    }
 
-    public void GetBulletReference(int bulletIndex, out BulletInfoAndBasicAccessRef bulletRef)
-    {
-        bulletRef = new BulletPoolReference(bulletIndex, this);
-    }
-    public void ForceDispose()
-    {
-        m_pool.DisposeMemoryUse(); targets.Dispose();
-    }
-    public void RefreshTransformTargets()
-    {
-        targets.SetTransforms(m_transformsByBulletsId);
-    }
-    JobHandle transformJobHandler;
-    private bool mtransformJobStarted=false;
-    private bool wasComputedOnce;
-    public void StartRefreshTransformPosition()
-    {
-        transformJobHandler = m_pool.Schedule(targets);
-        mtransformJobStarted = true;
-    }
-    public void StopRefreshTransformPosition()
-    {
-        if (mtransformJobStarted) { 
-             transformJobHandler.Complete();
-            wasComputedOnce = true;
-        }
-    }
-    public bool WasTransformComputedOnce()
-    {
-        return wasComputedOnce;
-    }
+//    public void GetBulletReference(int bulletIndex, out BulletInfoAndBasicAccessRef bulletRef)
+//    {
+//        bulletRef = new BulletPoolReference(bulletIndex, this);
+//    }
+//    public void ForceDispose()
+//    {
+//        m_pool.DisposeMemoryUse(); targets.Dispose();
+//    }
+//    public void RefreshTransformTargets()
+//    {
+//        targets.SetTransforms(m_transformsByBulletsId);
+//    }
+//    JobHandle transformJobHandler;
+//    private bool mtransformJobStarted=false;
+//    private bool wasComputedOnce;
+//    public void StartRefreshTransformPosition()
+//    {
+//        transformJobHandler = m_pool.Schedule(targets);
+//        mtransformJobStarted = true;
+//    }
+//    public void StopRefreshTransformPosition()
+//    {
+//        if (mtransformJobStarted) { 
+//             transformJobHandler.Complete();
+//            wasComputedOnce = true;
+//        }
+//    }
+//    public bool WasTransformComputedOnce()
+//    {
+//        return wasComputedOnce;
+//    }
 
-    public void SetTranformView(IBulletIdTicket bulletId, Transform proposedView)
-    {
-        bulletId.GetId(out int id);
-        if (id >= 0 && id < m_transformsByBulletsId.Length)
-        {
-            m_transformsByBulletsId[id] = proposedView;
-            targets[id] = proposedView;
-        }
-    }
+//    public void SetTranformView(IBulletIdTicket bulletId, Transform proposedView)
+//    {
+//        bulletId.GetId(out int id);
+//        if (id >= 0 && id < m_transformsByBulletsId.Length)
+//        {
+//            m_transformsByBulletsId[id] = proposedView;
+//            targets[id] = proposedView;
+//        }
+//    }
 
-    public void GetNextAvailableBulletId(out IBulletIdTicket bulletId)
-    {
-        bulletId = null;
-        int antiLoop=0;
-        while( antiLoop<m_bulletCount) {
-            if (!m_pool.IsUsed(m_cyclingIndex))
-            {
-                bulletId = new BulletTicketId(m_cyclingIndex);
-                m_cyclingIndex++;
-                return;
-            }
-            else {
-                m_cyclingIndex++;
-            }
-            antiLoop++;
-        }
-        Debug.Log("Yoo "+ antiLoop);
-    }
-    public void GetLinkedTransform(IBulletIdTicket bulletId, out Transform linkedTransform)
-    {
-        bulletId.GetId(out int id);
-        if (id >= 0 && id < m_transformsByBulletsId.Length)
-        {
-            linkedTransform = m_transformsByBulletsId[id];
-        }
-        else
-        {
-            linkedTransform = null;
-        }
-    }
+//    public void GetNextAvailableBulletId(out IBulletIdTicket bulletId)
+//    {
+//        bulletId = null;
+//        int antiLoop=0;
+//        while( antiLoop<m_bulletCount) {
+//            if (!m_pool.IsUsed(m_cyclingIndex))
+//            {
+//                bulletId = new BulletTicketId(m_cyclingIndex);
+//                m_cyclingIndex++;
+//                return;
+//            }
+//            else {
+//                m_cyclingIndex++;
+//            }
+//            antiLoop++;
+//        }
+//        Debug.Log("Yoo "+ antiLoop);
+//    }
+//    public void GetLinkedTransform(IBulletIdTicket bulletId, out Transform linkedTransform)
+//    {
+//        bulletId.GetId(out int id);
+//        if (id >= 0 && id < m_transformsByBulletsId.Length)
+//        {
+//            linkedTransform = m_transformsByBulletsId[id];
+//        }
+//        else
+//        {
+//            linkedTransform = null;
+//        }
+//    }
 
    
 
-    ~BulletsPoolMovingComputeJobWrapper()
-    {
-        m_pool.DisposeMemoryUse();
-    }
-}
+//    ~BulletsPoolMovingComputeJobWrapper()
+//    {
+//        m_pool.DisposeMemoryUse();
+//    }
+//}
 
 [System.Serializable]
 public struct BulletTicketId : IBulletIdTicket
@@ -368,8 +351,8 @@ public struct BulletTicketId : IBulletIdTicket
 
 
 
-[BurstCompile]
-//[BurstCompile(CompileSynchronously = true)]
+//[BurstCompile]
+[BurstCompile(CompileSynchronously = true)]
 public struct BulletsPoolMovingComputeJob : IJobParallelFor , IJobParallelForTransform{
 
 
@@ -455,16 +438,33 @@ public struct BulletsPoolMovingComputeJob : IJobParallelFor , IJobParallelForTra
     {
         if (m_poolOfBullets[index].m_isActive) {
 
+            
             float t = m_currentGameTimeInSeconds - m_poolOfBullets[index].m_gameTimeWhenTriggerInSeconds;
-            BulletDataResult result = m_poolOfBulletsPosition[index];
-            result.m_isUsed = m_poolOfBullets[index].m_isActive;
-            result.m_previousPosition = result.m_currentPosition;
-            result.m_lifeTimeInSeconds = t;
+            if (t > m_poolOfBullets[index].m_bulletInfo.m_lifeTime)
+            {
+                TriggeredBulletData iniInfo= m_poolOfBullets[index];
+                iniInfo.m_isActive = false;
+                m_poolOfBullets[index]= iniInfo;
 
-            Vector3 v = m_poolOfBulletsPosition[index].m_currentPosition;
-            m_poolOfBullets[index].m_bulletInfo.GetPositionIn(t, ref v);
-            result.m_currentPosition = v;
-            m_poolOfBulletsPosition[index] = result;
+                BulletDataResult result = m_poolOfBulletsPosition[index];
+                result.m_isUsed = false;
+                result.m_lifeTimeInSeconds = t;
+                result.m_previousPosition =Vector3.zero;
+                result.m_currentPosition = Vector3.zero;
+                m_poolOfBulletsPosition[index] = result;
+            }
+            else {
+                BulletDataResult result = m_poolOfBulletsPosition[index];
+                result.m_isUsed = m_poolOfBullets[index].m_isActive;
+                result.m_previousPosition = result.m_currentPosition;
+                result.m_lifeTimeInSeconds = t;
+
+                Vector3 v = m_poolOfBulletsPosition[index].m_currentPosition;
+                m_poolOfBullets[index].m_bulletInfo.GetPositionIn(t, ref v);
+                result.m_currentPosition = v;
+                m_poolOfBulletsPosition[index] = result;
+            }
+        
 
 
         }
@@ -530,6 +530,17 @@ public struct BulletDataResult {
         direction = m_currentPosition - m_previousPosition;
         distance = direction.magnitude;
     }
+
+    internal void ResetAsAvailaible()
+    {
+
+         m_isUsed = false ;
+         m_previousPosition = Vector3.zero;
+         m_currentPosition = Vector3.zero; 
+         m_lifeTimeInSeconds=0;
+
+
+    }
 }
 
 [System.Serializable]
@@ -538,6 +549,12 @@ public struct TriggeredBulletData {
     public bool m_isActive;
     public float m_gameTimeWhenTriggerInSeconds;
     public BulletDataInitValue m_bulletInfo;
+
+    internal void ResetAsAvailaible()
+    {
+        m_isActive = false;
+        m_gameTimeWhenTriggerInSeconds = 0;
+    }
 }
 
 [System.Serializable]
@@ -545,6 +562,8 @@ public struct BulletDataInitValue {
 
     public Vector3 m_startPoint;
     public Vector3 m_directionSpeed;
+    public float m_lifeTime;
+    public float m_radius;
 
     public void GetPositionIn(float timeSinceTriggeredInSeconds, ref Vector3 newPosition)
     {

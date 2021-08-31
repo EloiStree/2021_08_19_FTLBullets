@@ -9,12 +9,14 @@ public class Demo_FragmenationExplosion : MonoBehaviour
     public Transform m_sourceOfExplosion;
     public Transform[] m_existingTransformInScene;
     public BulletJobSystemFacadeMono m_bulletJobSystem;
-    public float m_minSpeed=0.5f;
-    public float m_maxSpeed=3f;
-
+    public float m_minSpeed=2f;
+    public float m_maxSpeed=6f;
+    public float m_lifeTime = 4;
 
     public uint m_numberToUse=15000;
     public GameObject m_objectToUse;
+    public float m_timeBetweenExplosion=5;
+    public float m_radius;
 
     void Start()
     {
@@ -33,7 +35,7 @@ public class Demo_FragmenationExplosion : MonoBehaviour
         }
 
         Invoke("Explosion",  2);
-        InvokeRepeating("ReExplosion", 10, 10);
+        InvokeRepeating("ReExplosion", m_timeBetweenExplosion, m_timeBetweenExplosion);
     }
     public void Explosion()
     {
@@ -44,7 +46,7 @@ public class Demo_FragmenationExplosion : MonoBehaviour
             if (m_existingTransformInScene[i] != null) { 
                     m_existingTransformInScene[i].forward = direction;
             }
-            m_bulletJobSystem.SpawnBullet(start, direction, m_existingTransformInScene[i], out IBulletIdTicket ticket);
+            m_bulletJobSystem.SpawnBullet(start, direction, m_lifeTime, m_radius, m_existingTransformInScene[i], out IBulletIdTicket ticket);
         }
     }
     public void ReExplosion()
@@ -57,7 +59,7 @@ public class Demo_FragmenationExplosion : MonoBehaviour
             {
                     m_existingTransformInScene[i].forward = direction;
             }
-            m_bulletJobSystem.ForceSetBullet(i, start, direction, m_existingTransformInScene[i]);
+            m_bulletJobSystem.ForceSetBullet(i, start, direction, m_lifeTime, m_radius, m_existingTransformInScene[i]);
         }
     }
     private Vector3 GetRandomDirection(float minSpeed,float maxSpeed)

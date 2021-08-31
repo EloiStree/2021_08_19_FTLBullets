@@ -6,12 +6,42 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Jobs;
 
-public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
+public class BulletJobSystemFacadeMono : AbstractBulletsManager, IBulletJobSystemFacade
 {
+
+    [Header("In")]
+    [Space(10)]
+    [Header("Low Distance")]
+    [Space(10)]
+    public GameObject m_prefabRepresentation;
+    public float m_lowDistanceMaxDistance=1;
+    [Header("Medium Distance")]
+    [Space(10)]
+    public Mesh m_lowMeshToDraw;
+    public Material m_lowMeshMaterial;
+    public float m_mediumDistanceMaxDistance = 3;
+    [Header("Long Distance")]
+    [Space(10)]
+    public Material m_squadMaterial;
+    public float m_longDistanceMaxDistance = 200;
+
+
+    [Header("Out")]
+    [Space(10)]
+
+    public DuoCapsuleLinesEvent m_collisionEvent;
+    public DuoCapsuleLineDelegateEvent m_collisionEventDelegate;
+
+    [Space(20)]
+    [Header("Setup")]
+    [Space(20)]
+
+
     public uint m_numberOfBullets;
-    public BulletsPoolMovingComputeJobWrapper m_jobPositioning;
+    
 
     public NABulletsDataRef m_bulletsInfoInMemoryRef;
+    public NACapsuleLineDataRef m_capsuleLineInMemoryRef;
     public NABulletsTransformRef m_transformInMemoryRef;
 
     public JobCompute_MovingBulletsWrapper    m_bulletsJobManager;
@@ -24,8 +54,10 @@ public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
     public BulletDataResult m_bulletResult;
     public Transform m_linkedTransform;
 
+    public bool m_useBulletToMesh;
     public BulletsToMeshColliderJobSystem m_bulletsToMesh;
     public JobBulletsFilteringMono m_jobBulletsFilter;
+    public Experiment_JobComputeBulletCapsuleLine m_jobCapsuleComputing;
 
     public UnityEvent m_beforeComputingStart;
     public UnityEvent m_afterPositionComputing;
@@ -37,14 +69,21 @@ public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
     {
         m_bulletsInfoInMemoryRef = new NABulletsDataRef(m_numberOfBullets);
         m_transformInMemoryRef = new NABulletsTransformRef(m_numberOfBullets);
+        m_capsuleLineInMemoryRef = new NACapsuleLineDataRef(m_numberOfBullets);
         m_bulletsInfoInMemoryRef.GetNativeArrayBulletData(out NativeArray<TriggeredBulletData> bullets);
         m_bulletsInfoInMemoryRef.GetNativeArrayBulletData(out NativeArray<BulletDataResult> bulletsResult);
-         m_bulletMovingExe = new JobComputeExe_MovingBullets();
+        m_capsuleLineInMemoryRef.GetNativeActiveLayer(out NativeBoolLayerMask capsuleLayer);
+        m_capsuleLineInMemoryRef.GetNativeArrayCapsuleIne(out NativeArray<S_CapsuleLine> capsule);
+
+
+        m_bulletMovingExe = new JobComputeExe_MovingBullets();
          m_bulletTransformExe = new JobComputeExe_DefaultBulletsToTransform();
-        m_bulletsToMesh.SetBulletsMemory(bulletsResult);
-        m_bulletMovingExe.SetSharedMemory(bullets, bulletsResult);
+        if(m_useBulletToMesh)
+            m_bulletsToMesh.SetBulletsMemory(bulletsResult);
+        m_bulletMovingExe.SetSharedMemory(bullets, bulletsResult, capsuleLayer, capsule);
         m_bulletTransformExe.SetSharedMemory(bulletsResult);
         m_jobBulletsFilter.SetBulletsNativeArray(bulletsResult);
+        m_jobCapsuleComputing.SetBulletsRefWith(capsuleLayer, capsule);
 
         m_bulletsJobManager = new JobCompute_MovingBulletsWrapper(m_bulletMovingExe);
         m_transformJobManager = new JobCompute_TransformBulletsWrapper(m_bulletTransformExe);
@@ -80,7 +119,7 @@ public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
         }
     }
 
-    public void SpawnBullet(Vector3 position, Vector3 directionSpeed, Transform proposedView, out IBulletIdTicket ticket)
+    public void SpawnBullet(Vector3 position, Vector3 directionSpeed, float lifeTimeInSeconds, float radius, Transform customTransform, out IBulletIdTicket ticket)
     {
         float gameTime = Time.time;
         m_bulletSeeker.GetNextAvailableBulletId(out ticket);
@@ -90,16 +129,24 @@ public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
             {
                 m_isActive = true,
                 m_gameTimeWhenTriggerInSeconds = gameTime,
+
+
                 m_bulletInfo = new BulletDataInitValue()
                 {
+
                     m_startPoint = position,
-                    m_directionSpeed= directionSpeed
+                    m_directionSpeed = directionSpeed,
+                    m_lifeTime = lifeTimeInSeconds,
+                    m_radius = radius
                 }
             }
-            );
-        m_transformInMemoryRef.SetTransform(id, proposedView);
+            ); 
+
+
+        if (customTransform!=null)
+        m_transformInMemoryRef.SetTransform(id, customTransform);
     }
-    internal void ForceSetBullet(int id, Vector3 position, Vector3 directionSpeed, Transform proposedView)
+    internal void ForceSetBullet(int id, Vector3 position, Vector3 directionSpeed, float lifeTimeInSeconds, float radius, Transform proposedView)
     {
         float gameTime = Time.time;
         m_bulletsInfoInMemoryRef.SetBullet(id,
@@ -111,6 +158,9 @@ public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
                  {
                      m_startPoint = position,
                      m_directionSpeed = directionSpeed
+                     ,
+                     m_lifeTime = lifeTimeInSeconds,
+                     m_radius = radius
                  }
              }
              );
@@ -136,12 +186,22 @@ public class BulletJobSystemFacadeMono : MonoBehaviour, IBulletJobSystemFacade
 
     }
 
+    public override void GetBulletInfo(uint id, ComputedBulletInfo bulletInfo)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void RequestBulletFire(Vector3 startPoint, Vector3 direction, float speedInUnityPerSecond, float lifeTimeInSeconds, float radius, out IBulletIdTicket ticket)
+    {
+        SpawnBullet(startPoint, direction * speedInUnityPerSecond, lifeTimeInSeconds, radius, null, out ticket);
+    }
+
 }
 
 
 public interface IBulletJobSystemFacade {
 
-    void SpawnBullet(Vector3 position, Vector3 directionSpeed, Transform proposedView, out IBulletIdTicket ticket);
+    void SpawnBullet(Vector3 position, Vector3 directionSpeed, float timeInSeconds, float radius, Transform proposedView, out IBulletIdTicket ticket);
 
 }
 
@@ -153,7 +213,7 @@ public class NextBulletAvailableSeeker {
 
     public void SetMemoryArrayUsed(NativeArray<TriggeredBulletData> array) {
         m_bullets = array;
-        m_bulletsCount = (uint) array.Length;
+        m_bulletsCount = (uint)array.Length;
     }
 
     public void GetNextAvailableBulletId(out IBulletIdTicket bulletId)
@@ -162,6 +222,9 @@ public class NextBulletAvailableSeeker {
         int antiLoop = 0;
         while (antiLoop < m_bulletsCount)
         {
+            if (m_cyclingIndex >= m_bulletsCount)
+                m_cyclingIndex = 0;
+
             if (!m_bullets[m_cyclingIndex].m_isActive)
             {
                 bulletId = new BulletTicketId(m_cyclingIndex);
@@ -173,6 +236,16 @@ public class NextBulletAvailableSeeker {
                 m_cyclingIndex++;
             }
             antiLoop++;
+        }
+        throw new OutOfAmmoExeception(this, "You are apparently our to ammo in your pool. Tweak your level design or give more bullets to the player at game start.");
+    }
+
+    public class OutOfAmmoExeception : Exception
+    {
+        public NextBulletAvailableSeeker m_bulletsSeekerState;
+        public OutOfAmmoExeception(NextBulletAvailableSeeker seeker,string message) : base(message)
+        {
+            m_bulletsSeekerState = seeker;
         }
     }
 }

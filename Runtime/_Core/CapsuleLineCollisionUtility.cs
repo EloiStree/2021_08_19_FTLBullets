@@ -12,17 +12,43 @@ public class CapsuleLineCollisionUtility
     public static void CheckReachabilityOfTwoCapsules(
       Transform startPointA, Transform endPointA, float lineRadiusA,
   Transform startPointB, Transform endPointB, float lineRadiusB,
-      out ReachFiltering reachableState, ref CapsuleReachCheckDebugInfo debugInfo, bool useDebugDraw)
+      out ReachFiltering reachableState, bool useDebugDraw)
     {
 
         CheckReachabilityOfTwoCapsules(
             startPointA.position, endPointA.position, lineRadiusA,
-    startPointB.position, endPointB.position, lineRadiusB, out reachableState, ref debugInfo, useDebugDraw);
+    startPointB.position, endPointB.position, lineRadiusB, out reachableState, useDebugDraw);
     }
+
+    public static void CheckIfNearEnough(
+   ref Vector3 startPointA, ref Vector3 endPointA, ref float lineRadiusA,
+ref Vector3 startPointB, ref Vector3 endPointB, ref float lineRadiusB,
+   out bool isInRange)
+    {
+        isInRange = false;
+
+
+        float radiusAandB = lineRadiusA + lineRadiusB;
+
+        float distanceAWithRadius = (endPointA - startPointA).magnitude+radiusAandB;
+        float distanceStart = (startPointB - startPointA).magnitude;
+        float distanceEnd = (endPointB - startPointA).magnitude;
+        
+        float minDistanceRange = distanceStart<distanceEnd?distanceStart:distanceEnd;
+       // float maxDistanceRange = distanceStart > distanceEnd ? distanceStart : distanceEnd;
+
+        if (distanceAWithRadius < minDistanceRange)
+            isInRange= false;
+        else
+            isInRange= true;
+
+    }
+
+
     public static  void CheckReachabilityOfTwoCapsules(
     Vector3 startPointA, Vector3 endPointA, float lineRadiusA,
 Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
-    out ReachFiltering reachableState, ref CapsuleReachCheckDebugInfo debugInfo, bool useDebugDraw)
+    out ReachFiltering reachableState, bool useDebugDraw)
     {
         reachableState = ReachFiltering.MaybeReachable;
 
@@ -31,7 +57,7 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
         float distanceStart = (startPointB - startPointA).magnitude;
         float distanceEnd = (endPointB - startPointA).magnitude;
         float lineMaxRange = (endPointA - startPointA).magnitude + radiusAandB;
-        if (lineMaxRange <= distanceStart && lineMaxRange <= distanceEnd)
+        if (lineMaxRange <= distanceStart || lineMaxRange <= distanceEnd)
         {
             reachableState = ReachFiltering.LineANotInDistanceRange;
             return;
@@ -97,14 +123,14 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
 
 
 
-        if (debugInfo != null)
-        {
-            debugInfo.m_angleHorizontalLeft = extreStartBAngle;
-            debugInfo.m_angleHorizontalRight = extreEndBAngle;
-            debugInfo.m_angleVertical = verticalAngleMax;
-            debugInfo.m_bulletAngleHorizontal = pointAngleHorizontal;
-            debugInfo.m_bulletAngleVertical = pointAngleVertical;
-        }
+        //if (debugInfo != null)
+        //{
+        //    debugInfo.m_angleHorizontalLeft = extreStartBAngle;
+        //    debugInfo.m_angleHorizontalRight = extreEndBAngle;
+        //    debugInfo.m_angleVertical = verticalAngleMax;
+        //    debugInfo.m_bulletAngleHorizontal = pointAngleHorizontal;
+        //    debugInfo.m_bulletAngleVertical = pointAngleVertical;
+        //}
     }
     [System.Serializable]
     public class CapsuleReachCheckDebugInfo
@@ -164,6 +190,11 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
 
     }
 
+    public static void AreColliding(ref Vector3 startPoint, ref float startPointRadius, ref Vector3 endPoint, ref float endPointRadius, out bool areColliding)
+    {
+        areColliding = (endPoint - startPoint).magnitude < (startPointRadius + endPointRadius);
+    }
+
 
     public static bool AreLinesSectionCouldCollide(
       Vector3 startPointA, Vector3 endPointA, float lineRadiusA,
@@ -221,9 +252,26 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
         Vector3 startPointA,
         Vector3 endPointA
         , Vector3 startPointB,
+        Vector3 endPointB
+        , bool useDebugDraw = false)
+
+    {
+        throw new System.Exception();
+    }
+
+
+        public static void GetShortestLineBetweenTwoSections_FirstDraft(
+        out Vector3 shortestStartLineA,
+        out Vector3 shortestEndLineB,
+        Vector3 startPointA,
+        Vector3 endPointA
+        , Vector3 startPointB,
         Vector3 endPointB, float exageration=1000f
         , bool useDebugDraw=false)
+
     {
+
+
 
         //COmputing the axes of an imaginary cartesian plane.
         Vector3 targetDirectionCenter = ((startPointB + endPointB) / 2f) - startPointA;
@@ -248,7 +296,7 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
             Debug.DrawLine(startPointA, endPointB, Color.black);
             Debug.DrawLine(startPointA, startPointB, Color.black);
         }
-        GetShortestLineBetweenTwoSectionsLocalComputation(
+        GetShortestLineBetweenTwoSectionsLocalComputation_FirstDraft(
             out shortestStartLineA, out shortestEndLineB,
             relocateAngle * (startPointB - startPointA),
             relocateAngle * (endPointB - startPointA),
@@ -257,7 +305,7 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
             startPointA, exageration, useDebugDraw);
     }
 
-    private static void GetShortestLineBetweenTwoSectionsLocalComputation(out Vector3 shortestStartLineA,
+    private static void GetShortestLineBetweenTwoSectionsLocalComputation_FirstDraft( out Vector3 shortestStartLineA,
         out Vector3 shortestEndLineB,
         Vector3 startPointB,
         Vector3 endPointB,
@@ -328,8 +376,8 @@ Vector3 startPointB, Vector3 endPointB, float lineRadiusB,
         if (useDebugDraw)
         {
 
-            Debug.DrawLine(shortestVectorOrigine, shortestVectorEnd, Color.yellow);
-            Debug.DrawLine(shortestStartLineA, shortestEndLineB, Color.yellow);
+            Debug.DrawLine(shortestVectorOrigine, shortestVectorEnd, Color.yellow+Color.red);
+            Debug.DrawLine(shortestStartLineA, shortestEndLineB, Color.yellow + Color.red);
         }
 
 

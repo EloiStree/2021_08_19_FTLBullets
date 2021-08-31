@@ -22,8 +22,10 @@ public class BulletsToMeshColliderJobSystem : MonoBehaviour
     public int m_bulletsCount;
     public int m_verticesCount;
     public int m_triangleIntCount;
+    public bool m_wasInitialized;
 
     public void SetBulletsMemory(NativeArray<BulletDataResult> bulletsMemory) {
+        m_wasInitialized = true;
         m_bulletsCount = bulletsMemory.Length;
 
         m_jobMesh.Init(bulletsMemory, m_baseSize);
@@ -77,24 +79,11 @@ public class BulletsToMeshColliderJobSystem : MonoBehaviour
 
     }
 
-    private void Update()
-    {
-       // Physics.BakeMesh(m_mesh.GetInstanceID(), false);
-        //m_meshCollider.sharedMesh
-        //if (m_meshColliderObj != null)
-        //{
-        //    m_meshColliderObj.SetActive(false);
-        //    m_meshColliderObj.SetActive(true);
-        //    //GameObject go = m_meshCollider.gameObject;
-        //    //Destroy(m_meshCollider);
-        //    //m_meshCollider = (MeshCollider)go.AddComponent(typeof(MeshCollider));
-        //    //m_meshCollider.sharedMesh.RecalculateBounds();
-        //}
-
-    }
     public void RefreshMesh()
     {
-      JobHandle job=  m_jobMesh.Schedule(m_jobMesh.m_bulletsCount, 64);
+        if (!m_wasInitialized)
+            return;
+        JobHandle job=  m_jobMesh.Schedule(m_jobMesh.m_bulletsCount, 64);
         job.Complete();
         m_jobMesh.ApplyToMesh(ref m_mesh);
 
@@ -123,17 +112,34 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
     public void Execute(int index)
     {
 
-        //VERSION WITH TWO TRIANGLES
-        int triangleIndex = index * 6;
-        int verticesIndex = index * 3; 
-        int i1 = verticesIndex;
-        int i2 = verticesIndex + 1;
-        int i3 = verticesIndex + 2;
-        Vector3 start = m_bulletResult[index].m_currentPosition; ;
-        Vector3 direction = m_bulletResult[index].m_currentPosition - m_bulletResult[index].m_previousPosition;
-        m_vertices[verticesIndex] = m_bulletResult[index].m_previousPosition;
-        m_vertices[verticesIndex+1] = start + (q1 * (direction * m_triangleBaseSize));
-        m_vertices[verticesIndex+2] = start + (q2 * (direction * m_triangleBaseSize));
+
+        int verticesIndex = index * 3;
+        if (m_bulletResult[index].m_isUsed)
+        {
+            //VERSION WITH TWO TRIANGLES
+            int triangleIndex = index * 6;
+            int i1 = verticesIndex;
+            int i2 = verticesIndex + 1;
+            int i3 = verticesIndex + 2;
+
+            Vector3 pevious = m_bulletResult[index].m_previousPosition.magnitude < 0.0001f
+                ?
+                m_bulletResult[index].m_currentPosition : 
+                m_bulletResult[index].m_previousPosition;
+
+            Vector3 start = m_bulletResult[index].m_currentPosition; ;
+            Vector3 direction = m_bulletResult[index].m_currentPosition - m_bulletResult[index].m_previousPosition;
+            m_vertices[verticesIndex] = m_bulletResult[index].m_previousPosition;
+            m_vertices[verticesIndex + 1] = start + (q1 * (direction * m_triangleBaseSize));
+            m_vertices[verticesIndex + 2] = start + (q2 * (direction * m_triangleBaseSize));
+        }
+        else
+        {
+            m_vertices[verticesIndex]    = Vector3.zero;
+            m_vertices[verticesIndex + 1] = Vector3.zero;
+            m_vertices[verticesIndex + 2] = Vector3.zero;
+
+        }
 
 
 

@@ -9,6 +9,7 @@ public class NABulletsTransformRef {
 
 
     private uint m_elementMaxCount;
+
     public Transform[] m_transforms;
     public TransformAccessArray m_transformAccess;
 

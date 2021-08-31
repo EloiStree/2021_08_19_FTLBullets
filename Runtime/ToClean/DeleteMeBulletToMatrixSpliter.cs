@@ -7,6 +7,7 @@ public class DeleteMeBulletToMatrixSpliter : MonoBehaviour
     public int count=9999;
     public SeaweedMatrixSpliterMono m_seaweed;
     public Transform m_whereToCreate;
+    public Transform[] m_created;
     public bool m_active;
     // Start is called before the first frame update
     void Awake()
@@ -22,7 +23,8 @@ public class DeleteMeBulletToMatrixSpliter : MonoBehaviour
                 g.transform.parent = m_whereToCreate;
                 created.Add(g.transform);
             }
-            m_seaweed.m_demo = created.ToArray();
+            m_created = created.ToArray();
+            m_seaweed.matrixSplite.m_spliter.PushIn(m_created, m_whereToCreate);
         }
 
 

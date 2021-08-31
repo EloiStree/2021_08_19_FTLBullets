@@ -27,4 +27,5 @@ public class JobCompute_MovingBulletsWrapper
       JobHandle handler=  m_jobExe.Schedule(m_jobExe.m_bulletsInitParams.Length, 64);
       handler.Complete();
     }
+
 }

@@ -11,7 +11,7 @@ public class Demo_HowToGunBullets : MonoBehaviour
     public float m_timeBetweenFireSeconds = 0.2f;
     public float m_bulletLifeTimeWanted=20;
     public float m_bulletSpeed=500;
-    
+    public float m_radiusOrBullet;
     
     IEnumerator Start()
     {
@@ -29,7 +29,7 @@ public class Demo_HowToGunBullets : MonoBehaviour
     {
 
         if(m_bulletManager!=null)
-            m_bulletManager.RequestBulletFire(m_gunSpawnPoint.position, m_gunSpawnPoint.forward, m_bulletSpeed, m_bulletLifeTimeWanted,
+            m_bulletManager.RequestBulletFire(m_gunSpawnPoint.position, m_gunSpawnPoint.forward, m_bulletSpeed, m_bulletLifeTimeWanted, m_radiusOrBullet,
             out IBulletIdTicket bulletTicket);
     }
 

@@ -2,25 +2,32 @@
 using Unity.Collections;
 using UnityEngine;
 
+public abstract class AbstractCapsuleLineMono : MonoBehaviour, ICapsuleLine
+{
+    public abstract void GetLineAsPoints(out Vector3 startPointPosition, out Vector3 endPointPosition);
+    public abstract void GetLineAsPointsWithRadius(out Vector3 startPointPosition, out Vector3 endPointPosition, out float radius);
+    public abstract void GetLineRadius(out float radius);
+}
 
-public class UpdateTrackLineColliderMono : MonoBehaviour, ICapsuleLine
+
+public class UpdateTrackLineColliderMono : AbstractCapsuleLineMono
 {
 
 
     public Transform m_linkedTransform;
     public float m_radius;
 
-    [Header("Debug")]
-    public NCLR_LineRef m_lineRef;
+    //[Header("Debug")]
+    //public NCLR_LineRef m_lineRef;
 
 
-    private void Awake()
-    {
-        SceneCapsuleLineRegister.m_bulletClaimManager.Claim(out int id);
-        SceneCapsuleLineRegister.m_bulletInScene.GetRegisterLink(id, out m_lineRef);
-        m_lineRef.SetRadius(ref m_radius);
+    //private void Awake()
+    //{
+      //  SceneCapsuleLineRegister.m_bulletClaimManager.Claim(out int id);
+    //    SceneCapsuleLineRegister.m_bulletInScene.GetRegisterLink(id, out m_lineRef);
+    //    m_lineRef.SetRadius(ref m_radius);
 
-    }
+    //}
     public Vector3 m_previousPosition;
     public Vector3 m_currentPosition;
 
@@ -28,23 +35,23 @@ public class UpdateTrackLineColliderMono : MonoBehaviour, ICapsuleLine
     {
         m_previousPosition = m_currentPosition;
         m_currentPosition = m_linkedTransform.position;
-        m_lineRef.SetLineWith( m_previousPosition, m_currentPosition);
+       // m_lineRef.SetLineWith( m_previousPosition, m_currentPosition);
     }
 
-    public void GetLineAsPoints(out Vector3 startPointPosition, out Vector3 endPointPosition)
+    public override void GetLineAsPoints(out Vector3 startPointPosition, out Vector3 endPointPosition)
     {
         startPointPosition = m_previousPosition;
         endPointPosition = m_currentPosition;
     }
 
-    public void GetLineAsPointsWithRadius(out Vector3 startPointPosition, out Vector3 endPointPosition, out float radius)
+    public override void GetLineAsPointsWithRadius(out Vector3 startPointPosition, out Vector3 endPointPosition, out float radius)
     {
         startPointPosition = m_previousPosition;
         endPointPosition = m_currentPosition;
         radius = m_radius;
     }
 
-    public void GetLineRadius(out float radius)
+    public override void GetLineRadius(out float radius)
     {
         radius= m_radius ;
     }

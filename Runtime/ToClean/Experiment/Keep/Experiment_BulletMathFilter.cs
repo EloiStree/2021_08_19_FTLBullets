@@ -23,6 +23,6 @@ public class Experiment_BulletMathFilter : MonoBehaviour
         CapsuleLineCollisionUtility.CheckReachabilityOfTwoCapsules(
                  m_startPointA, m_endPointA, m_radiusA,
                 m_startPointB, m_endPointB, m_radiusB,
-            out m_reachFilter, ref  m_debug, m_useDebugDraw);
+            out m_reachFilter,  m_useDebugDraw);
     }
 }
