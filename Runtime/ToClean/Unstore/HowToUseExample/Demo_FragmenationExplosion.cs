@@ -18,6 +18,8 @@ public class Demo_FragmenationExplosion : MonoBehaviour
     public float m_timeBetweenExplosion=5;
     public float m_radius;
 
+    public float m_timeStart = 30;
+
     void Start()
     {
         m_existingTransformInScene = new Transform[m_numberToUse];
@@ -34,8 +36,8 @@ public class Demo_FragmenationExplosion : MonoBehaviour
             }
         }
 
-        Invoke("Explosion",  2);
-        InvokeRepeating("ReExplosion", m_timeBetweenExplosion, m_timeBetweenExplosion);
+        Invoke("Explosion", m_timeStart);
+        InvokeRepeating("ReExplosion", m_timeStart, m_timeBetweenExplosion);
     }
     public void Explosion()
     {

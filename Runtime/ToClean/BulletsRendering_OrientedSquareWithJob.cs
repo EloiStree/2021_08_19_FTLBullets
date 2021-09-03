@@ -93,6 +93,7 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
         m_job.Init();
         m_job.Set(m_bulletsRenderingRef);
         m_job.Set(m_bulletsRef);
+        m_job.Set(m_bulletInitRef);
         m_job.Set(new NativeArray<Vector3>(v3, Allocator.Persistent));
         m_job.Set(new NativeArray<int>(lp, Allocator.Persistent));
         m_job.SetMeshInfo(m_maxQuad, m_maxQuad * 4);
@@ -117,6 +118,8 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
         public NativeArray<BulletRendering> m_bulletWantedRenderingInfo;
         [NativeDisableParallelForRestriction]
         public NativeArray<BulletDataResult> m_bulletStateResultInfo;
+        [NativeDisableParallelForRestriction]
+        public NativeArray<TriggeredBulletData> m_bulletStateInitInfo;
 
         [NativeDisableParallelForRestriction]
         public NativeArray<Vector3> m_positions;
@@ -128,6 +131,10 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
         internal void Set(NativeArray<BulletDataResult> bulletDataResult)
         {
             m_bulletStateResultInfo = bulletDataResult;
+        }
+        internal void Set(NativeArray<TriggeredBulletData> bulletInitData)
+        {
+            m_bulletStateInitInfo = bulletInitData;
         }
         public void Set(NativeArray<BulletRendering> bulletRenderingInfo)
         {
@@ -182,9 +189,12 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
                 
           
             int idBullet = m_ids[index];
+            bool isBulletUsed = m_bulletStateResultInfo[index].m_isUsed;
             int vertexIndexPosition = index * 4;
-            if ( idBullet < 0 )
-            {
+            
+            //if (idBullet < 0 || !isBulletUsed)
+                if (idBullet < 0 )
+                {
                 m_positions[vertexIndexPosition + 0] = Vector3.zero;
                 m_positions[vertexIndexPosition + 1] = Vector3.zero;
                 m_positions[vertexIndexPosition + 2] = Vector3.zero;
@@ -193,6 +203,8 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
             else {
 
                 Vector3 cameraDirection = m_bulletWantedRenderingInfo[idBullet].m_cameraDirection.normalized;
+                float radius = m_bulletStateInitInfo[idBullet].m_bulletInfo.m_radius;
+                float squareSize = (float)Math.Sqrt(radius * radius + radius * radius);
                 Quaternion cQ = Quaternion.LookRotation(cameraDirection, Vector3.up);
                 Vector3 position = m_bulletStateResultInfo[idBullet].m_currentPosition;
                 //Debug.DrawLine(position, position+ cameraDirection *10);
@@ -202,10 +214,10 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
                 //m_positions[vertexIndexPosition + 2] = (position + (m_ptl * cameraDirection));
                 //m_positions[vertexIndexPosition + 3] = (position + (m_ptr * cameraDirection));
 
-                m_positions[vertexIndexPosition + 0] = position + ((cQ * m_pbl) * Vector3.forward * m_squareSize) ;
-                m_positions[vertexIndexPosition + 1] = position + ((cQ * m_pbr) * Vector3.forward * m_squareSize);
-                m_positions[vertexIndexPosition + 2] = position + ((cQ * m_ptl) * Vector3.forward * m_squareSize);
-                m_positions[vertexIndexPosition + 3] = position + ((cQ * m_ptr) * Vector3.forward * m_squareSize);
+                m_positions[vertexIndexPosition + 0] = position + ((cQ * m_pbl) * Vector3.forward * radius) ;
+                m_positions[vertexIndexPosition + 1] = position + ((cQ * m_pbr) * Vector3.forward * radius);
+                m_positions[vertexIndexPosition + 2] = position + ((cQ * m_ptl) * Vector3.forward * radius);
+                m_positions[vertexIndexPosition + 3] = position + ((cQ * m_ptr) * Vector3.forward * radius);
 
 
                 // Q * V3Direction

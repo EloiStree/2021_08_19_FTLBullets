@@ -83,6 +83,7 @@ public class BulletsToMeshColliderJobSystem : MonoBehaviour
     {
         if (!m_wasInitialized)
             return;
+        m_jobMesh.m_triangleBaseSize = m_baseSize*0.5f;
         JobHandle job=  m_jobMesh.Schedule(m_jobMesh.m_bulletsCount, 64);
         job.Complete();
         m_jobMesh.ApplyToMesh(ref m_mesh);
@@ -128,8 +129,8 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
                 m_bulletResult[index].m_previousPosition;
 
             Vector3 start = m_bulletResult[index].m_currentPosition; ;
-            Vector3 direction = m_bulletResult[index].m_currentPosition - m_bulletResult[index].m_previousPosition;
-            m_vertices[verticesIndex] = m_bulletResult[index].m_previousPosition;
+            Vector3 direction = (m_bulletResult[index].m_currentPosition - pevious).normalized;
+            m_vertices[verticesIndex] = pevious;
             m_vertices[verticesIndex + 1] = start + (q1 * (direction * m_triangleBaseSize));
             m_vertices[verticesIndex + 2] = start + (q2 * (direction * m_triangleBaseSize));
         }

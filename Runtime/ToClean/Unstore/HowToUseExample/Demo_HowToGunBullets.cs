@@ -12,6 +12,7 @@ public class Demo_HowToGunBullets : MonoBehaviour
     public float m_bulletLifeTimeWanted=20;
     public float m_bulletSpeed=500;
     public float m_radiusOrBullet;
+    public float m_randomnessAtFiringAngle = 0.1f;
     
     IEnumerator Start()
     {
@@ -28,8 +29,12 @@ public class Demo_HowToGunBullets : MonoBehaviour
     private void Fire()
     {
 
+        Quaternion randomnes = Quaternion.Euler(
+            UnityEngine.Random.Range(-m_randomnessAtFiringAngle, m_randomnessAtFiringAngle),
+            UnityEngine.Random.Range(-m_randomnessAtFiringAngle, m_randomnessAtFiringAngle),
+            0);
         if(m_bulletManager!=null)
-            m_bulletManager.RequestBulletFire(m_gunSpawnPoint.position, m_gunSpawnPoint.forward, m_bulletSpeed, m_bulletLifeTimeWanted, m_radiusOrBullet,
+            m_bulletManager.RequestBulletFire(m_gunSpawnPoint.position, randomnes*m_gunSpawnPoint.forward , m_bulletSpeed, m_bulletLifeTimeWanted, m_radiusOrBullet,
             out IBulletIdTicket bulletTicket);
     }
 

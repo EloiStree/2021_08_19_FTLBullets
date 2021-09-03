@@ -53,7 +53,7 @@ public class JobBulletsFilteringListener_Particules : AbstractBulletsToRenderLis
 
 public interface IBulletsToRenderListener {
     void InitWithCount(int count);
-    void SetBulletsInformatoinRef(NativeArray<BulletDataResult> bulletsResult, NativeArray<BulletRendering> bulletsRendering);
+    void SetBulletsInformatoinRef(NativeArray<TriggeredBulletData> bulletInit, NativeArray<BulletDataResult> bulletsResult, NativeArray<BulletRendering> bulletsRendering);
     void ApplyComputeRendering(ref FilteredBulletsId bulletsToProcess);
 }
 
@@ -61,12 +61,14 @@ public abstract class AbstractBulletsToRenderListener : MonoBehaviour, IBulletsT
 {
     protected NativeArray<BulletDataResult> m_bulletsRef;
     protected NativeArray<BulletRendering> m_bulletsRenderingRef;
+    protected NativeArray<TriggeredBulletData> m_bulletInitRef;
     public abstract void ApplyComputeRendering(ref FilteredBulletsId bulletsToProcess );
     public abstract void InitWithCount(int count);
-    public  void SetBulletsInformatoinRef(NativeArray<BulletDataResult> bulletsResult, NativeArray<BulletRendering> bullets)
+    public  void SetBulletsInformatoinRef(NativeArray<TriggeredBulletData> bulletInit,NativeArray<BulletDataResult> bulletsResult, NativeArray<BulletRendering> bullets)
     {
         m_bulletsRef = bulletsResult;
         m_bulletsRenderingRef = bullets;
+        m_bulletInitRef = bulletInit;
         InitWithCount(m_bulletsRef.Length);
     }
 }

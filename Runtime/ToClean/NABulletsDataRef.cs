@@ -32,9 +32,17 @@ public class  NABulletsDataRef
 
     public void SetBulletAs(int index, bool isUsed)
     {
+        bool change = false;
         TriggeredBulletData bullet = m_initBulletsParameterMemory[index];
+        change = bullet.m_isActive != isUsed;
         bullet.m_isActive = isUsed;
         m_initBulletsParameterMemory[index] = bullet;
+
+        if (change) { 
+            BulletDataResult d = m_computeResultMemory[index];
+            d.ResetAsAvailaible();
+            m_computeResultMemory[index] = d;
+        }
     }
 
     public void SetBullet(int index, TriggeredBulletData bullet)

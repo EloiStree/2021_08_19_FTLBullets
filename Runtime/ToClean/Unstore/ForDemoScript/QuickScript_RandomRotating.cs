@@ -22,4 +22,8 @@ public class QuickScript_RandomRotating : MonoBehaviour
         m_targetAnchorToRotate.Rotate(m_constance, m_basicAngle * m_speedFactor * Time.deltaTime);
         
     }
+    private void Reset()
+    {
+        m_targetAnchorToRotate = transform;
+    }
 }

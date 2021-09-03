@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
@@ -31,6 +32,16 @@ public class Temporary_SetJobComputeTargetWithMono : MonoBehaviour
                 m_targetsAsCapsule[i] = c;
             }
         }
+    }
+
+    public AbstractCapsuleLineMono Get(int targetId)
+    {
+        if (targetId < 0)
+            return null;
+        if (targetId >= m_targets.Length)
+            return null;
+        return m_targets[targetId];
+
     }
 
     void Update()

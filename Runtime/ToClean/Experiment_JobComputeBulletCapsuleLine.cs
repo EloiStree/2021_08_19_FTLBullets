@@ -10,6 +10,13 @@ using UnityEngine.Jobs;
 
 public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
 {
+
+    public delegate void CollisionListernWithShortenPath(S_CapsulesCollision collisionEmitted);
+    public delegate void CollisionListernLight(int bulletId, int bulletableId);
+
+    public CollisionListernLight m_listenToCollisionId;
+    public CollisionListernWithShortenPath m_listenToCollisionShortenPath;
+
     public NativeBoolLayerMask m_activeBullets;
     public NativeArray<S_CapsuleLine> m_capsuleBullet;
     public NativeBoolLayerMask m_activeBulletables;
@@ -121,7 +128,7 @@ public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
 
 
 
-
+        /* //USE MATRICE To PREfilter bullets 
         LinkedList<int> aroundTheCell = new LinkedList<int>();
         for (int i = 0; i < m_capsuleBulletable.Length; i++)
         {
@@ -144,10 +151,10 @@ public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
                 if (aroundTheCell.Count > 0)
                 {
 
+
                     //Job to check what of those are active and worthy for the bulletable.
-
-
                     //Job to compute the collision of the those who worth it.
+                    //CheckForCollisionWithBulletable(i, aroundTheCell); 
 
                 }
 
@@ -161,34 +168,64 @@ public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
                     Debug.DrawLine(reloZero, m_position, Color.white, .5f);
                     m_matrixSpliter.DrawSquare(i3x3, Color.red, .5f);
 
-                   // DrawBulletsPath(aroundTheCell.ToArray(), Color.green);
+                    // DrawBulletsPath(aroundTheCell.ToArray(), Color.green);
                 }
 
 
             }
 
         }
+        //*/
+        //TEST WITH ALL on the first bulletable
+        m_activeBullets.GetIdListOfActive(out List<int> allBulletsActive);
+        for (int i = 0; i < m_capsuleBulletable.Length; i++)
+            CheckForCollisionWithBulletable(i, allBulletsActive); 
+    }
 
+    private void CheckForCollisionWithBulletable( int bulletableId, IEnumerable<int> bulletsId )
+    {
         bool wantDebugCollisions = true;
 
-        a =b=c= false;
-        if (m_threadComputeInit && m_capsuleBulletable.Length>0) {
+        a = b = c = false;
+        if (m_threadComputeInit && m_capsuleBulletable.Length > 0)
+        {
             //Should be in seaweed filter but for the moment I will try all bullets on first bulletable;
-            m_target = m_capsuleBulletable[0];
+            m_target = m_capsuleBulletable[bulletableId];
             //DOING WITH ALL BULLET FOR TESTING...
-            a = true;
-            ComputeListOfBulletsWithOneBulletable(ref m_target, m_activeBullets, out Queue<int> inZoneBullets);
+          
+            ComputeListOfBulletsWithOneBulletable(ref m_target, bulletsId, out Queue<int> inZoneBullets);
             if (inZoneBullets != null)
             {
-                b = true;
-                ComputeListOfBulletsCollidingWithOneBulletable(ref m_target, inZoneBullets, out List<int> collidingBullets, wantDebugCollisions, out S_CapsulesCollision[] collisionsDetails);
-                if (wantDebugCollisions && collisionsDetails != null) {
+                ComputeListOfBulletsCollidingWithOneBulletable(ref m_target,
+                    inZoneBullets,
+                    out List<int> collidingBullets,
+                    wantDebugCollisions || m_listenToCollisionShortenPath!=null,
+                    out S_CapsulesCollision[] collisionsDetails);
 
-                    c = true;
-                   
-                    test = collisionsDetails;
+                if ( collisionsDetails != null)
+                {
+
+
+                    if (m_listenToCollisionId != null)
+                    {
+                        for (int i = 0; i < collidingBullets.Count; i++)
+                        {
+                            m_listenToCollisionId(collidingBullets[i], bulletableId);
+
+                        }
+                    }
+                    if (m_listenToCollisionShortenPath != null)
+                    {
+                        for (int i = 0; i < collisionsDetails.Length; i++)
+                        {
+                            m_listenToCollisionShortenPath(collisionsDetails[i]);
+
+                        }
+                    }
+
                 }
-                else test = new S_CapsulesCollision[0];
+
+
             }
 
             for (int i = 0; i < computedTest.Length; i++)
@@ -271,6 +308,8 @@ public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
         }
         else
         {
+            bulletInCollision = new List<int>();
+            int[] idsIn = bulletsToInteractWith.ToArray();
             TempNativeList list = new TempNativeList();
             list.Set(bulletsToInteractWith);
             NativeBoolLayerMask collidingResultBool = new NativeBoolLayerMask();
@@ -284,22 +323,33 @@ public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
             m_jobColliding.SetData(list, m_capsuleBulletable[0], collidingResultBool, collidingResultDetails);
             JobHandle handle = m_jobColliding.Schedule(list.m_size, 64);
             handle.Complete(); 
-            computedTest = new S_CapsulesCollision[collidingResultDetails.Length];
-            collidingResultDetails.CopyTo(computedTest);
+            //computedTest = new S_CapsulesCollision[collidingResultDetails.Length];
+            //collidingResultDetails.CopyTo(computedTest);
 
-            collidingResultBool.GetIdListOfActive(out m_bulletOneColliding);
+            collidingResultBool.GetIdListOfActive(out List<int>valideIdOFTempListColliding);
+            for (int i = 0; i < valideIdOFTempListColliding.Count; i++)
+            {
+                bulletInCollision.Add(idsIn[valideIdOFTempListColliding[i]]);
+               
+
+            }
+            m_bulletOneColliding = bulletInCollision;
+            
+            //not sure of me
             if (withCollisionDetails) {
-                collisionDetailsOfCollidingBullets = new S_CapsulesCollision[m_bulletOneColliding.Count];
+                collisionDetailsOfCollidingBullets = new S_CapsulesCollision[bulletInCollision.Count];
  
-                for (int i = 0; i < m_bulletOneColliding.Count; i++)
+                for (int i = 0; i < collisionDetailsOfCollidingBullets.Length; i++)
                 {
-                    collisionDetailsOfCollidingBullets[i] = collidingResultDetails[m_bulletOneColliding[i]];
+                    collisionDetailsOfCollidingBullets[i] = collidingResultDetails[valideIdOFTempListColliding[i]];
                 }
             }
+            test = collisionDetailsOfCollidingBullets;
             DrawBulletsPath(m_bulletOneColliding.ToArray(), Color.red);
             list.Dispose();
             collidingResultBool.Dispose();
             collidingResultDetails.Dispose();
+
         }
     }
 
@@ -308,8 +358,8 @@ public class Experiment_JobComputeBulletCapsuleLine : MonoBehaviour
     public Color m_debugNow = Color.green;
     public List<int> m_bulletOneCollisionPossible;
     public List<int> m_bulletOneColliding;
-    public S_CapsulesCollision[] test;
     public S_CapsulesCollision[] computedTest;
+    public S_CapsulesCollision[] test;
 
     public bool m_isInZone;
     public int m_position0;
@@ -448,10 +498,11 @@ public struct JobExe_IsItCapsulesCollidingWith : IJobParallelFor
     public NativeBoolLayerMask m_bulletToComputeInCollision;
     public NativeArray<S_CapsulesCollision> m_capsuleCollisions;
 
-
+    public CapsuleLineCollisionComputation m_collisionUtility;
     public void SetBulletsRef(NativeArray<S_CapsuleLine> capsules)
     {
         m_bullets = capsules;
+        m_collisionUtility = new CapsuleLineCollisionComputation();
     }
 
     public void SetData(TempNativeList listOfBulletsToCheck,
@@ -478,22 +529,26 @@ public struct JobExe_IsItCapsulesCollidingWith : IJobParallelFor
         S_CapsuleLine bullet = m_bullets[bulletId];
         S_CapsulesCollision collision = m_capsuleCollisions[index];
 
-        if(s==  e){
-            s = e + Vector3.one * 1f;
+        if(s==  e)
+        {
+            //s = e + Vector3.one * 1f;
+            //Give an axis if the algo detection of collision can't detect capsule not moving
+            //s = e + Vector3.one * 0.001f;
         }
 
-        CapsuleLineCollisionUtility.GetShortestLineBetweenTwoSections( 
+        m_collisionUtility.GetShortestLineBetweenTwoSections( 
             out collision.m_shortestPath.m_bulletShortestStart, 
             out collision.m_shortestPath.m_bulletableShorestEnd, 
             bullet.m_start,  bullet.m_end, s,e
-           , true);
+           , false);
 
         if (collision.m_shortestPath.m_bulletShortestStart == Vector3.zero && collision.m_shortestPath.m_bulletableShorestEnd == Vector3.zero)
         {
             areColliding = false;
         }
         else {
-            CapsuleLineCollisionUtility.AreColliding(
+
+            AreColliding(
                ref collision.m_shortestPath.m_bulletShortestStart,
                ref bullet.m_radius,
                ref collision.m_shortestPath.m_bulletableShorestEnd,
@@ -511,7 +566,10 @@ public struct JobExe_IsItCapsulesCollidingWith : IJobParallelFor
         }
     }
 
-
+    public  void AreColliding(ref Vector3 startPoint, ref float startPointRadius, ref Vector3 endPoint, ref float endPointRadius, out bool areColliding)
+    {
+        areColliding = (endPoint - startPoint).magnitude < (startPointRadius + endPointRadius);
+    }
 }
 
 

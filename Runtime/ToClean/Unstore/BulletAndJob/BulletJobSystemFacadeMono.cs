@@ -82,7 +82,7 @@ public class BulletJobSystemFacadeMono : AbstractBulletsManager, IBulletJobSyste
             m_bulletsToMesh.SetBulletsMemory(bulletsResult);
         m_bulletMovingExe.SetSharedMemory(bullets, bulletsResult, capsuleLayer, capsule);
         m_bulletTransformExe.SetSharedMemory(bulletsResult);
-        m_jobBulletsFilter.SetBulletsNativeArray(bulletsResult);
+        m_jobBulletsFilter.SetBulletsNativeArray(bullets,bulletsResult);
         m_jobCapsuleComputing.SetBulletsRefWith(capsuleLayer, capsule);
 
         m_bulletsJobManager = new JobCompute_MovingBulletsWrapper(m_bulletMovingExe);
@@ -119,11 +119,17 @@ public class BulletJobSystemFacadeMono : AbstractBulletsManager, IBulletJobSyste
         }
     }
 
+    public int m_lastIdUsed;
+    public int m_idInQueue;
     public void SpawnBullet(Vector3 position, Vector3 directionSpeed, float lifeTimeInSeconds, float radius, Transform customTransform, out IBulletIdTicket ticket)
     {
         float gameTime = Time.time;
         m_bulletSeeker.GetNextAvailableBulletId(out ticket);
         ticket.GetId(out int id);
+        m_lastIdUsed = id;
+
+        m_idInQueue = m_bulletSeeker.m_shouldBeAvailaible.Count;
+
         m_bulletsInfoInMemoryRef.SetBullet(id,
             new TriggeredBulletData()
             {
@@ -166,6 +172,12 @@ public class BulletJobSystemFacadeMono : AbstractBulletsManager, IBulletJobSyste
              );
         m_transformInMemoryRef.SetTransform(id, proposedView);
     }
+    public void DeactivateBullet(int id) {
+
+        m_bulletsInfoInMemoryRef.SetBulletAs(id, false);
+        m_bulletSeeker.EnqueuAvailaibleId(id);
+    }
+
 
     public void Update()
     {
@@ -196,6 +208,12 @@ public class BulletJobSystemFacadeMono : AbstractBulletsManager, IBulletJobSyste
         SpawnBullet(startPoint, direction * speedInUnityPerSecond, lifeTimeInSeconds, radius, null, out ticket);
     }
 
+    public override void NotifyBulletAsNotUsedAnymore(IBulletIdTicket bulletTicket)
+    {
+        bulletTicket.GetId(out int id);
+        DeactivateBullet(id);
+
+    }
 }
 
 
@@ -211,14 +229,28 @@ public class NextBulletAvailableSeeker {
     public uint m_bulletsCount;
     public NativeArray<TriggeredBulletData> m_bullets;
 
+
     public void SetMemoryArrayUsed(NativeArray<TriggeredBulletData> array) {
         m_bullets = array;
         m_bulletsCount = (uint)array.Length;
     }
+   
 
     public void GetNextAvailableBulletId(out IBulletIdTicket bulletId)
     {
         bulletId = null;
+        int idShouldBeOk;
+        
+        while (m_shouldBeAvailaible.Count>0)
+        {
+            idShouldBeOk = m_shouldBeAvailaible.Dequeue();
+            if (!m_bullets[idShouldBeOk].m_isActive)
+            {
+                bulletId = new BulletTicketId(idShouldBeOk);
+                return;
+            }
+        }
+
         int antiLoop = 0;
         while (antiLoop < m_bulletsCount)
         {
@@ -238,6 +270,11 @@ public class NextBulletAvailableSeeker {
             antiLoop++;
         }
         throw new OutOfAmmoExeception(this, "You are apparently our to ammo in your pool. Tweak your level design or give more bullets to the player at game start.");
+    }
+    public Queue<int> m_shouldBeAvailaible = new Queue<int>();
+    public void EnqueuAvailaibleId(int id)
+    {
+        m_shouldBeAvailaible.Enqueue(id);
     }
 
     public class OutOfAmmoExeception : Exception

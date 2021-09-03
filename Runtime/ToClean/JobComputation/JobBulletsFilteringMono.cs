@@ -11,9 +11,11 @@ public class JobBulletsFilteringMono : MonoBehaviour
 {
     JobComputeExe_FilterBulletsByDistance m_jobsFiltering;
     public float m_maxRenderingAngle = 110;
-    public float m_closeDistance = 10;
-    public float m_mediumDistance = 150;
-    public float m_farDistance = 5000;
+
+    public float m_maxCloseDistance = 10;
+    public float m_maxMediumDistance = 150;
+    public float m_maxSquadFarDistance = 5000;
+    public float m_maxPixelFarDistance = 20000;
 
     public Transform m_playerPointOfView;
 
@@ -37,16 +39,16 @@ public class JobBulletsFilteringMono : MonoBehaviour
 
  
 
-    public void SetBulletsNativeArray(NativeArray<BulletDataResult> bullets) {
+    public void SetBulletsNativeArray(NativeArray<TriggeredBulletData> bulletInit, NativeArray<BulletDataResult> bullets) {
         m_jobsFiltering = new JobComputeExe_FilterBulletsByDistance();
-        m_jobsFiltering.SetFilterPreferences(m_closeDistance,
-           m_mediumDistance,
-           m_farDistance,
+        m_jobsFiltering.SetFilterPreferences(m_maxCloseDistance,
+           m_maxMediumDistance,
+           m_maxSquadFarDistance,
            m_maxRenderingAngle);
         m_jobsFiltering.SetNativeArrayOfBullets(bullets);
         for (int i = 0; i < m_listener.Length; i++)
         {
-            m_listener[i].SetBulletsInformatoinRef(bullets, m_jobsFiltering.m_bulletRenderData);
+            m_listener[i].SetBulletsInformatoinRef(bulletInit,bullets, m_jobsFiltering.m_bulletRenderData);
         }
     }
     public void GetBulletsRenderingResult(out NativeArray<BulletRendering> bulletRenderData) {
@@ -89,12 +91,24 @@ public class JobBulletsFilteringMono : MonoBehaviour
                 m_filteredBulletsId.m_mediumIds.Add(i);
                 m_mediumCount++;
             }
-            else if (dType == BulletDistanceType.Far) {
+            else if (dType == BulletDistanceType.Far)
+            {
 
                 m_filteredBulletsId.m_farIds.Add(i);
                 m_farCount++;
             }
+            else if (dType == BulletDistanceType.PixelFar)
+            {
+
+                m_filteredBulletsId.m_pixelFarIds.Add(i);
+                m_maxPixelFarDistance++;
+            }
         }
+        m_closeCount = m_filteredBulletsId.m_closeIds.Count;
+        m_mediumCount = m_filteredBulletsId.m_mediumIds.Count;
+        m_farCount = m_filteredBulletsId.m_farIds.Count;
+        m_maxPixelFarDistance = m_filteredBulletsId.m_pixelFarIds.Count;
+
         m_pourcentRender = (float)m_renderCount / (float)bulletsRendering.Length;
         m_bulletResultInfo = m_jobsFiltering.m_bulletsRef[m_bulletIndex];
         m_bulletRenderingInfo = m_jobsFiltering.m_bulletRenderData[m_bulletIndex];
@@ -108,16 +122,17 @@ public class JobBulletsFilteringMono : MonoBehaviour
 
 public class FilteredBulletsId
 {
-
     public List<int> m_closeIds = new List<int>();
     public List<int> m_mediumIds = new List<int>();
     public List<int> m_farIds = new List<int>();
+    public List<int> m_pixelFarIds = new List<int>();
 
     public void Clear()
     {
         m_closeIds.Clear();
         m_mediumIds.Clear();
         m_farIds.Clear();
+        m_pixelFarIds.Clear();
     }
 
 
@@ -132,8 +147,9 @@ public struct JobComputeExe_FilterBulletsByDistance : IJobParallelFor{
     public float m_maxRenderingAngle;
     public float m_maxHaflRenderingAngle;
     public float m_closeDistance ;
-    public float m_mediumDistance ;
-    public float m_farDistance ;
+    public float m_mediumDistance;
+    public float m_farDistance;
+    public float m_pixelFarDistance;
 
     public NativeArray<BulletDataResult> m_bulletsRef;
     public NativeArray<BulletRendering> m_bulletRenderData;
@@ -187,9 +203,15 @@ public struct JobComputeExe_FilterBulletsByDistance : IJobParallelFor{
             m_bulletRenderData[index] = br;
             return;
         }
-        
-
-        if (br.m_distance > m_mediumDistance)
+        if (br.m_distance > m_pixelFarDistance)
+        {
+            br.m_distanceType = BulletDistanceType.TooFar;
+        }
+        else if (br.m_distance > m_farDistance)
+        {
+            br.m_distanceType = BulletDistanceType.PixelFar;
+        }
+        else if (br.m_distance > m_mediumDistance)
         {
             br.m_distanceType = BulletDistanceType.Far;
         }
@@ -237,4 +259,4 @@ public struct BulletRendering
          m_outOfAngle=false;
     }
 }
-public enum BulletDistanceType { Close, Medium, Far, TooFar }
+public enum BulletDistanceType { Close, Medium, Far, PixelFar, TooFar }
