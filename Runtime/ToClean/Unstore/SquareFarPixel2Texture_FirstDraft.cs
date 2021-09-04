@@ -4,19 +4,17 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SquareFarPixel2Texture : AbstractSquareFarPixelRendererListener
+public class SquareFarPixel2Texture_FirstDraft : AbstractSquareFarPixelRendererListener
 {
 
     public Camera m_camera;
     public PixelFarConfig m_currentConfig;
     public RenderTexture m_texture;
     public Texture2D m_textureTemp;
-    public ComputeShader m_blackFlusher;
 
-    public Transform m_debugObject;
     public Renderer m_debugObjectRenderer;
-
     public RawImage m_debugRawImageTexture;
+    public Material m_debugMaterial;
 
 
     public override void InitParams(PixelFarConfig config)
@@ -39,13 +37,9 @@ public class SquareFarPixel2Texture : AbstractSquareFarPixelRendererListener
         }
         if (m_debugObjectRenderer != null)
         {
-            //m_debugObject.position = 
             m_debugObjectRenderer.material.mainTexture = m_textureTemp;
         }
-        if (m_debugObject != null)
-        {
-            //TODO MOve the object with the renderer
-        }
+       
         m_flushArray = new Color[config.m_widthInPixel * config.m_heightInPixel];
         for (int i = 0; i < m_flushArray.Length; i++)
         {
@@ -62,28 +56,28 @@ public class SquareFarPixel2Texture : AbstractSquareFarPixelRendererListener
     
 
 
-    private void FlushToBlackTransparent()
+    private void SetConfigWithCameraAngle()
     {
-        if (m_blackFlusher != null && m_texture != null)
+        if (m_camera != null)
         {
-            if (m_camera != null)
-            {
-                Vector3 left = Quaternion.Inverse(m_camera.transform.rotation)*(m_camera.ViewportToWorldPoint(new Vector3(-1f, 0, 10))- m_camera.transform.position);
-                Vector3 right = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(1f, 0, 10)) - m_camera.transform.position);
-                Vector3 top = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(0, 1f, 10)) - m_camera.transform.position);
-                Vector3 down = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(0, -1f, 10)) - m_camera.transform.position);
-                m_currentConfig.m_horizontalAngle = Vector3.Angle(left, right);
-                m_currentConfig.m_verticalAngle = Vector3.Angle(top, down);
+            Vector3 left = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(-1f, 0, 10)) - m_camera.transform.position);
+            Vector3 right = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(1f, 0, 10)) - m_camera.transform.position);
+            Vector3 top = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(0, 1f, 10)) - m_camera.transform.position);
+            Vector3 down = Quaternion.Inverse(m_camera.transform.rotation) * (m_camera.ViewportToWorldPoint(new Vector3(0, -1f, 10)) - m_camera.transform.position);
+            m_currentConfig.m_horizontalAngle = Vector3.Angle(left, right);
+            m_currentConfig.m_verticalAngle = Vector3.Angle(top, down);
 
-            }
-
-            //m_texture.Create();
-            //Should be done with shader
-            //int i = m_blackFlusher.FindKernel("CSMain");
-            //m_blackFlusher.SetBool("m_useTransparence", true);
-            //m_blackFlusher.SetTexture(i, "m_texture", m_texture);
-            //m_blackFlusher.Dispatch(i, 8, 8, 1);
         }
+
+    }
+    public void FlushToBlackTransparentWithShader() {
+        //m_texture.Create();
+        //Should be done with shader
+        //int i = m_blackFlusher.FindKernel("CSMain");
+        //m_blackFlusher.SetBool("m_useTransparence", true);
+        //m_blackFlusher.SetTexture(i, "m_texture", m_texture);
+        //m_blackFlusher.Dispatch(i, 8, 8, 1);
+
     }
     public override void RefreshWith(Vector3 worldPoint, Quaternion worldRotation, NativeArray<SquareFarPixel> farPixel)
     {

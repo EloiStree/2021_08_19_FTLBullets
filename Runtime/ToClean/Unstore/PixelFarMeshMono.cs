@@ -22,6 +22,7 @@ public class PixelFarMeshMono : MonoBehaviour
     Vector3[] m_worldLocation;
     NativeArray<Vector3> m_worldLocationTargets;
 
+    public Camera m_useCameraAngle;
 
 
     bool m_relcotedIsInit;
@@ -41,6 +42,8 @@ public class PixelFarMeshMono : MonoBehaviour
     void Awake()
     {
 
+        if (m_useCameraAngle != null)
+            SetConfigWithCameraAngle();
         m_jobRelocatedFromTransform = new RelocateJobTransform();
         m_jobRelocatedFromWorldVector3 = new RelocateJobWorldPosition();
         m_jobLocalToPixelCountsInfo = new LocalPositionToPixelCounts();
@@ -57,6 +60,19 @@ public class PixelFarMeshMono : MonoBehaviour
             m_pixelInfoCount.Dispose();
             m_pixelElementCount.Dispose();
         }
+    }
+    private void SetConfigWithCameraAngle()
+    {
+        if (m_useCameraAngle != null)
+        {
+            Vector3 left = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(-1f, 0, 10)) - m_useCameraAngle.transform.position);
+            Vector3 right = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(1f, 0, 10)) - m_useCameraAngle.transform.position);
+            Vector3 top = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(0, 1f, 10)) - m_useCameraAngle.transform.position);
+            Vector3 down = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(0, -1f, 10)) - m_useCameraAngle.transform.position);
+            m_config.m_horizontalAngle = Vector3.Angle(left, right);
+            m_config.m_verticalAngle = Vector3.Angle(top, down);
+        }
+
     }
 
     private bool transformInit;
@@ -316,11 +332,21 @@ public struct LocalPositionToPixelCounts : IJobParallelFor
             }
             vertical *= Math.Sign((float)ptv.y);
 
-            //ptResult.m_horizontalAngle = horizontal;
-            //ptResult.m_verticalAngle = vertical;
+        //ptResult.m_horizontalAngle = horizontal;
+        //ptResult.m_verticalAngle = vertical;
+        float vp = vertical / m_cellVerticalAngle;
+        float hp = horizontal / m_cellHorizontalAngle;
+        //if (vp >= -1f && vp < 0f)
+        //    vp = -1f;
+        //else if (vp <= 1f && vp > 0f)
+        //    vp = 1f;
+        //if (hp >= -1f && hp <= 0f)
+        //    hp = -1f;
+        //else if (hp <= 1f && hp >= 0f)
+        //    hp = 1f;
 
-            ptResult.m_horizontalAngleIndex = (int) Math.Round( horizontal / m_cellHorizontalAngle);
-            ptResult.m_verticalAngleIndex = (int) Math.Round(vertical / m_cellVerticalAngle);
+        ptResult.m_horizontalAngleIndex = (int) Math.Round(hp);
+            ptResult.m_verticalAngleIndex = (int) Math.Round(vp);
             ptResult.m_horizontalAngleIndexR = (m_halfWidthInPixel + ptResult.m_horizontalAngleIndex);
             ptResult.m_verticalAngleIndexR = (m_halfHeightInPixel + ptResult.m_verticalAngleIndex);
            

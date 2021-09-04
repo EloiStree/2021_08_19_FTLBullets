@@ -7,7 +7,7 @@ using Unity.Collections;
 using System;
 using Unity.Jobs;
 
-public class SquareFarPixel2Mesh : AbstractSquareFarPixelRendererListener
+public class SquareFarPixel2Mesh_FixUV : AbstractSquareFarPixelRendererListener
 {
 
     public Transform m_meshFilterPosition;
@@ -19,6 +19,7 @@ public class SquareFarPixel2Mesh : AbstractSquareFarPixelRendererListener
     public PixelFarConfig m_currentConfig;
     public float m_maxDistanceBounds = 100000;
     public JobExe_FarPixelToLocalSquareMesh m_job;
+
 
     private void Awake()
     {
