@@ -34,7 +34,9 @@ public class Demo_HowToGunBullets : MonoBehaviour
             UnityEngine.Random.Range(-m_randomnessAtFiringAngle, m_randomnessAtFiringAngle),
             0);
         if(m_bulletManager!=null)
-            m_bulletManager.RequestBulletFire(m_gunSpawnPoint.position, randomnes*m_gunSpawnPoint.forward , m_bulletSpeed, m_bulletLifeTimeWanted, m_radiusOrBullet,
+            m_bulletManager.RequestBulletFire(m_gunSpawnPoint.position,
+                randomnes*m_gunSpawnPoint.forward, m_gunSpawnPoint.rotation,
+                m_bulletSpeed, m_bulletLifeTimeWanted, m_radiusOrBullet,
             out IBulletIdTicket bulletTicket);
     }
 

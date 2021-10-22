@@ -5,7 +5,7 @@ using UnityEngine;
 public class Debug_ObserverOnBulletTicketId : MonoBehaviour
 {
     public BulletTicketId m_id;
-    public BulletJobSystemFacadeMono m_bulletsFacade;
+    public BulletsManagerJobSystemMono m_bulletsFacade;
 
     public TriggeredBulletData m_initValue;
     public BulletDataResult m_result;

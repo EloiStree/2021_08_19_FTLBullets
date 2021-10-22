@@ -81,12 +81,15 @@ public class SquareFarPixel2Mesh_GradiantUVWithDistance : AbstractSquareFarPixel
     }
     private Vector3[] m_flushingArray;
     private Vector2[] m_flushingArrayUV;
+    public SquareFarPixel[] m_humm;
     public override void RefreshWith(Vector3 worldPoint, Quaternion worldRotation, NativeArray<SquareFarPixel> farPixel)
     {
         if (!this.enabled) return;
+        m_humm = farPixel.ToArray();
         m_meshFilterPosition.position = worldPoint;
         m_meshFilterPosition.rotation = worldRotation;
 
+ //       Debug.Log("T");
         m_job.SetFarPixelsInfo(farPixel);
         m_job.FlushPointsInfo(ref m_flushingArray, ref m_flushingArrayUV);
 

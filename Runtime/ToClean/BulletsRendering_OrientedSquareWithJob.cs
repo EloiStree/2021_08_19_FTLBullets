@@ -22,14 +22,30 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
     public List<int> m_bulletsIndex;
     public ProcessBulletsForParallels m_job;
 
-   
+
+    private bool resetFlag;
     public override void ApplyComputeRendering(ref FilteredBulletsId bulletsToProcess)
     {
         m_bulletsIndex = bulletsToProcess.m_farIds;
-        m_job.SetIdToProcessList(bulletsToProcess.m_farIds);
-        m_job.m_squareSize = m_sizeOfBullets;
-        JobHandle jh= m_job.Schedule(m_maxQuad, 64);
-        jh.Complete();
+        if (m_bulletsIndex.Count < 1)
+        {
+            if (!resetFlag) {
+                resetFlag = true;
+                m_job.m_flushRequested = true;
+                JobHandle jh = m_job.Schedule(m_maxQuad, 64);
+                jh.Complete();
+                m_job.m_flushRequested = false;
+            }
+   
+        }
+        else {
+            m_job.SetIdToProcessList(bulletsToProcess.m_farIds);
+            m_job.m_squareSize = m_sizeOfBullets;
+            JobHandle jh = m_job.Schedule(m_maxQuad, 64);
+            jh.Complete();
+            resetFlag = false;
+        }
+     
 
 
         m_currentMesh.SetVertices(m_job.m_positions);
@@ -103,9 +119,11 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
         m_job.Dispose();
     }
 
+
     [BurstCompile(CompileSynchronously = true)]
     public struct ProcessBulletsForParallels : IJobParallelFor
     {
+        public bool m_flushRequested;
         public int m_maxQuad;
         public int m_maxQuadVertices;
 
@@ -186,14 +204,16 @@ public class BulletsRendering_OrientedSquareWithJob : AbstractBulletsToRenderLis
         {
             if (index >= m_maxQuad)
                 return;
-                
+         
+            
+
           
             int idBullet = m_ids[index];
             bool isBulletUsed = m_bulletStateResultInfo[index].m_isUsed;
             int vertexIndexPosition = index * 4;
             
             //if (idBullet < 0 || !isBulletUsed)
-                if (idBullet < 0 )
+                if (idBullet < 0 || m_flushRequested)
                 {
                 m_positions[vertexIndexPosition + 0] = Vector3.zero;
                 m_positions[vertexIndexPosition + 1] = Vector3.zero;

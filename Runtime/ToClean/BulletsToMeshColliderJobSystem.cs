@@ -9,7 +9,6 @@ using UnityEngine;
 public class BulletsToMeshColliderJobSystem : MonoBehaviour
 {
 
-    public float m_baseSize=0.1f;
     public JobCompteExe_BulletResultToMesh m_jobMesh;
     public Mesh m_mesh;
     public MeshFilter m_meshFilter;
@@ -24,11 +23,11 @@ public class BulletsToMeshColliderJobSystem : MonoBehaviour
     public int m_triangleIntCount;
     public bool m_wasInitialized;
 
-    public void SetBulletsMemory(NativeArray<BulletDataResult> bulletsMemory) {
+    public void SetBulletsMemory(NativeArray<BulletDataResult> bulletsMemory, NativeArray<TriggeredBulletData> initBulletsMemory ) {
         m_wasInitialized = true;
         m_bulletsCount = bulletsMemory.Length;
 
-        m_jobMesh.Init(bulletsMemory, m_baseSize);
+        m_jobMesh.Init(bulletsMemory, initBulletsMemory);
         m_verticesCount = m_jobMesh.m_vertices.Length;
     }
 
@@ -83,7 +82,6 @@ public class BulletsToMeshColliderJobSystem : MonoBehaviour
     {
         if (!m_wasInitialized)
             return;
-        m_jobMesh.m_triangleBaseSize = m_baseSize*0.5f;
         JobHandle job=  m_jobMesh.Schedule(m_jobMesh.m_bulletsCount, 64);
         job.Complete();
         m_jobMesh.ApplyToMesh(ref m_mesh);
@@ -105,11 +103,11 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
     public bool m_isInit;
     public int m_bulletsCount;
     public NativeArray<BulletDataResult> m_bulletResult;
+    public NativeArray<TriggeredBulletData> m_initInfo;
     [NativeDisableParallelForRestriction]
     public NativeArray<Vector3> m_vertices;
     Quaternion q1;
     Quaternion q2;
-    public float m_triangleBaseSize;
     public void Execute(int index)
     {
 
@@ -131,8 +129,8 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
             Vector3 start = m_bulletResult[index].m_currentPosition; ;
             Vector3 direction = (m_bulletResult[index].m_currentPosition - pevious).normalized;
             m_vertices[verticesIndex] = pevious;
-            m_vertices[verticesIndex + 1] = start + (q1 * (direction * m_triangleBaseSize));
-            m_vertices[verticesIndex + 2] = start + (q2 * (direction * m_triangleBaseSize));
+            m_vertices[verticesIndex + 1] = start + (q1 * (direction * m_initInfo[index].m_bulletInfo.m_radius));
+            m_vertices[verticesIndex + 2] = start + (q2 * (direction * m_initInfo[index].m_bulletInfo.m_radius));
         }
         else
         {
@@ -151,12 +149,12 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
 
 
 
-    public void Init(NativeArray<BulletDataResult> bulletsSharedMemory, float baseSize)
+    public void Init(NativeArray<BulletDataResult> bulletsSharedMemory, NativeArray<TriggeredBulletData> initInfo)
     {
         m_isInit = true;
         m_bulletResult = bulletsSharedMemory;
         m_bulletsCount = bulletsSharedMemory.Length;
-
+        m_initInfo = initInfo;
         Vector3[] vertices = new Vector3[m_bulletsCount * 3];
         m_vertices = new NativeArray<Vector3>(vertices, Allocator.Persistent);
 
@@ -166,7 +164,6 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
 
         q1 = Quaternion.Euler(0, 90, 0);
        q2 = Quaternion.Euler(0, -90, 0);
-       m_triangleBaseSize = baseSize;
 
 
     }
@@ -182,6 +179,7 @@ public struct JobCompteExe_BulletResultToMesh : IJobParallelFor
 
     public void Dispose()
     {
+        if(m_vertices.IsCreated)
         m_vertices.Dispose();
     }
 }

@@ -23,6 +23,8 @@ public class PixelFarMeshMono : MonoBehaviour
     NativeArray<Vector3> m_worldLocationTargets;
 
     public Camera m_useCameraAngle;
+    public float m_cameraVerticalMultiplicator=1;
+    public float m_cameraHorizontalMultiplicator=1.0f;
 
 
     bool m_relcotedIsInit;
@@ -38,6 +40,8 @@ public class PixelFarMeshMono : MonoBehaviour
     LocalPositionToPixelCounts m_jobLocalToPixelCountsInfo;
     NativeArray<PointAsPixelInfo> m_pixelInfoCount;
     NativeArray<int> m_pixelElementCount;
+
+
 
     void Awake()
     {
@@ -69,8 +73,8 @@ public class PixelFarMeshMono : MonoBehaviour
             Vector3 right = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(1f, 0, 10)) - m_useCameraAngle.transform.position);
             Vector3 top = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(0, 1f, 10)) - m_useCameraAngle.transform.position);
             Vector3 down = Quaternion.Inverse(m_useCameraAngle.transform.rotation) * (m_useCameraAngle.ViewportToWorldPoint(new Vector3(0, -1f, 10)) - m_useCameraAngle.transform.position);
-            m_config.m_horizontalAngle = Vector3.Angle(left, right);
-            m_config.m_verticalAngle = Vector3.Angle(top, down);
+            m_config.m_horizontalAngle = Vector3.Angle(left, right)* m_cameraHorizontalMultiplicator;
+            m_config.m_verticalAngle = Vector3.Angle(top, down)* m_cameraVerticalMultiplicator;
         }
 
     }
@@ -113,7 +117,7 @@ public class PixelFarMeshMono : MonoBehaviour
         }
     }
 
-    public void RefreshTargetWorldPointsRef(NativeArray<Vector3> pointsToPush)
+    public void RefreshTargetWithWorldPointsRef(NativeArray<Vector3> pointsToPush)
     {
         m_sourceType = SourceType.Vector3;
         m_worldLocationTargets = pointsToPush;
@@ -421,10 +425,6 @@ public struct PixelFarConfig
     public int m_widthInPixel;
     public int m_heightInPixel;
 
-    internal void GetAngleOf(int squareIndex, out float startLeftAngle, out float endRightAngle, out float startBotAngle, out float endTopAngle)
-    {
-        throw new NotImplementedException();
-    }
 }
 
 

@@ -8,7 +8,7 @@ public class Demo_FragmenationExplosion : MonoBehaviour
 
     public Transform m_sourceOfExplosion;
     public Transform[] m_existingTransformInScene;
-    public BulletJobSystemFacadeMono m_bulletJobSystem;
+    public BulletsManagerJobSystemMono m_bulletJobSystem;
     public float m_minSpeed=2f;
     public float m_maxSpeed=6f;
     public float m_lifeTime = 4;

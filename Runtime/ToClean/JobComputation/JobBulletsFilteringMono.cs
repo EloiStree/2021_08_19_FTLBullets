@@ -24,6 +24,7 @@ public class JobBulletsFilteringMono : MonoBehaviour
     public int m_closeCount;
     public int m_mediumCount;
     public int m_farCount;
+    public int m_pixelFarCount;
     public int m_renderCount;
     public FilteredBulletsId m_filteredBulletsId = new FilteredBulletsId();
     [Range(0,1)]
@@ -41,9 +42,11 @@ public class JobBulletsFilteringMono : MonoBehaviour
 
     public void SetBulletsNativeArray(NativeArray<TriggeredBulletData> bulletInit, NativeArray<BulletDataResult> bullets) {
         m_jobsFiltering = new JobComputeExe_FilterBulletsByDistance();
-        m_jobsFiltering.SetFilterPreferences(m_maxCloseDistance,
+        m_jobsFiltering.SetFilterPreferences(
+           m_maxCloseDistance,
            m_maxMediumDistance,
            m_maxSquadFarDistance,
+           m_maxPixelFarDistance,
            m_maxRenderingAngle);
         m_jobsFiltering.SetNativeArrayOfBullets(bullets);
         for (int i = 0; i < m_listener.Length; i++)
@@ -83,31 +86,31 @@ public class JobBulletsFilteringMono : MonoBehaviour
             if (dType == BulletDistanceType.Close)
             {
                 m_filteredBulletsId.m_closeIds.Add(i);
-                m_closeCount++;
+                // m_closeCount++;
             }
             else if (dType == BulletDistanceType.Medium)
             {
 
                 m_filteredBulletsId.m_mediumIds.Add(i);
-                m_mediumCount++;
+                //  m_mediumCount++;
             }
             else if (dType == BulletDistanceType.Far)
             {
 
                 m_filteredBulletsId.m_farIds.Add(i);
-                m_farCount++;
+                //  m_farCount++;
             }
             else if (dType == BulletDistanceType.PixelFar)
             {
 
                 m_filteredBulletsId.m_pixelFarIds.Add(i);
-                m_maxPixelFarDistance++;
+               // m_pixelFarCount++;
             }
         }
         m_closeCount = m_filteredBulletsId.m_closeIds.Count;
         m_mediumCount = m_filteredBulletsId.m_mediumIds.Count;
         m_farCount = m_filteredBulletsId.m_farIds.Count;
-        m_maxPixelFarDistance = m_filteredBulletsId.m_pixelFarIds.Count;
+        m_pixelFarCount = m_filteredBulletsId.m_pixelFarIds.Count;
 
         m_pourcentRender = (float)m_renderCount / (float)bulletsRendering.Length;
         m_bulletResultInfo = m_jobsFiltering.m_bulletsRef[m_bulletIndex];
@@ -120,6 +123,7 @@ public class JobBulletsFilteringMono : MonoBehaviour
     }
 }
 
+[System.Serializable]
 public class FilteredBulletsId
 {
     public List<int> m_closeIds = new List<int>();
@@ -158,11 +162,12 @@ public struct JobComputeExe_FilterBulletsByDistance : IJobParallelFor{
         m_cameraDirection = direction;
         m_cameraPosition = position;
     }
-    public void SetFilterPreferences(float closeDistance, float mediumDistance, float farDistance, float cameraRenderingAngle) {
+    public void SetFilterPreferences(float closeDistance, float mediumDistance, float farDistance, float farPixelDistance, float cameraRenderingAngle) {
 
         m_closeDistance = closeDistance;
         m_mediumDistance = mediumDistance;
         m_farDistance = farDistance;
+        m_pixelFarDistance = farPixelDistance;
         m_maxRenderingAngle = cameraRenderingAngle;
         m_maxHaflRenderingAngle = m_maxRenderingAngle / 2f;
     }
@@ -189,7 +194,7 @@ public struct JobComputeExe_FilterBulletsByDistance : IJobParallelFor{
 
         br.m_bulletId = index;
         br.m_distance = directionFromCamera.magnitude;
-        if (br.m_distance > m_farDistance)
+        if (br.m_distance > m_pixelFarDistance)
         {
             br.m_distanceType = BulletDistanceType.TooFar;
             br.m_canBeRender = false;

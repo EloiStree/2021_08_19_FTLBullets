@@ -564,6 +564,7 @@ public struct BulletDataInitValue {
     public Vector3 m_directionSpeed;
     public float m_lifeTime;
     public float m_radius;
+    public Quaternion m_rotation;
 
     public void GetPositionIn(float timeSinceTriggeredInSeconds, ref Vector3 newPosition)
     {

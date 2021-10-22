@@ -48,6 +48,8 @@ public class JobBulletsFilteringListener_Particules : AbstractBulletsToRenderLis
 
         m_particuleSystem.SetParticles(m_particles, numParticlesAlive);
     }
+
+   
 }
 
 
@@ -55,6 +57,7 @@ public interface IBulletsToRenderListener {
     void InitWithCount(int count);
     void SetBulletsInformatoinRef(NativeArray<TriggeredBulletData> bulletInit, NativeArray<BulletDataResult> bulletsResult, NativeArray<BulletRendering> bulletsRendering);
     void ApplyComputeRendering(ref FilteredBulletsId bulletsToProcess);
+
 }
 
 public abstract class AbstractBulletsToRenderListener : MonoBehaviour, IBulletsToRenderListener
@@ -64,6 +67,7 @@ public abstract class AbstractBulletsToRenderListener : MonoBehaviour, IBulletsT
     protected NativeArray<TriggeredBulletData> m_bulletInitRef;
     public abstract void ApplyComputeRendering(ref FilteredBulletsId bulletsToProcess );
     public abstract void InitWithCount(int count);
+
     public  void SetBulletsInformatoinRef(NativeArray<TriggeredBulletData> bulletInit,NativeArray<BulletDataResult> bulletsResult, NativeArray<BulletRendering> bullets)
     {
         m_bulletsRef = bulletsResult;
